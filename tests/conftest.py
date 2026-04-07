@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.api.deps import get_agent_policy
-from app.schemas.policy import AgentPolicyDocument
+from app.policy.models import AgentPolicyDocument
 from tests.factories import build_test_policy
 
 # Adjust this import to match where your FastAPI app actually lives.

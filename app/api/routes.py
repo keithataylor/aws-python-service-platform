@@ -2,13 +2,13 @@ from typing import Annotated
 from app.api.deps import get_agent_policy
 from app.core.config import APP_VERSION, SERVICE_NAME
 from fastapi import APIRouter, Depends
-from app.schemas.policy import AgentPolicyDocument
+from app.policy.models import AgentPolicyDocument
 from app.schemas.system import HealthResponse, ServiceInfoResponse
 from app.schemas.echo import EchoRequest, EchoResponse
 from app.schemas.task import TaskSubmitRequest, TaskSubmitResponse, TaskStatusResponse
 from app.services.task_service import get_task_status, submit_task
 from app.schemas.agent_action import AgentActionDecisionResponse, AgentActionRequest
-from app.services.agent_policy_service import evaluate_agent_action
+from app.policy.evaluator import evaluate_agent_action
 
 
 router = APIRouter()

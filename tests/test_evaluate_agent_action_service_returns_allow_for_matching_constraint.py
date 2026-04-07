@@ -1,7 +1,6 @@
 
 from app.schemas.agent_action import AgentActionRequest
-from app.schemas.policy import AgentPolicyDocument, AgentPolicyRule, PolicyConstraint
-from app.services.agent_policy_service import evaluate_agent_action
+from app.policy.evaluator import evaluate_agent_action
 from tests.factories import build_test_policy   
 
 

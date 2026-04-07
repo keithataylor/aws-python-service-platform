@@ -1,5 +1,5 @@
 from app.schemas.agent_action import AgentActionRequest
-from app.services.agent_policy_service import evaluate_agent_action
+from app.policy.evaluator import evaluate_agent_action
 from tests.factories import build_test_policy
 
 def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -> None:

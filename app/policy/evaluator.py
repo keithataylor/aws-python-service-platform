@@ -1,7 +1,7 @@
 """Agent policy decision service."""
 
 from app.schemas.agent_action import AgentActionDecisionResponse, AgentActionRequest
-from app.schemas.policy import AgentPolicyRule, PolicyConstraint, AgentPolicyDocument
+from app.policy.models import AgentPolicyRule, PolicyConstraint, AgentPolicyDocument
 
 
 def _constraint_matches(

@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.schemas.policy import PolicyObligation
+from app.policy.models import PolicyObligation
 
 AgentDecision = Literal["allow", "deny"]
 

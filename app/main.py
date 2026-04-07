@@ -3,7 +3,7 @@ from fastapi.concurrency import asynccontextmanager
 
 from app.api.routes import router, api_v1_router
 from app.core.config import SERVICE_NAME
-from app.core.policy_loader import load_agent_policy
+from app.policy.loader import load_agent_policy
 
 
 @asynccontextmanager

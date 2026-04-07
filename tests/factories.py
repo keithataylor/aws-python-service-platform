@@ -1,4 +1,4 @@
-from app.schemas.policy import AgentPolicyDocument, AgentPolicyRule, PolicyConstraint
+from app.policy.models import AgentPolicyDocument, AgentPolicyRule, PolicyConstraint
 
 
 def build_test_policy() -> AgentPolicyDocument:

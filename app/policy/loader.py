@@ -2,7 +2,7 @@
 import yaml
 
 from app.core.config import POLICY_FILE
-from app.schemas.policy import AgentPolicyDocument
+from app.policy.models import AgentPolicyDocument
 
 
 def load_agent_policy() -> AgentPolicyDocument:

@@ -1,7 +1,10 @@
 # TRACKER.md
 
 ## Current aim
-Build a recruiter-facing Python/AWS backend service that evolves toward an AI agent runtime policy decision point (PDP).
+Build a recruiter-facing Python/AWS backend service that is evolving toward an MCP/agent runtime access-control architecture, with proxy / PEP / PDP direction.
+
+The primary system story is agent tool-call control and runtime policy enforcement.
+The supporting engineering story is strong backend/platform implementation depth, including schemas, service design, persistence, async/concurrency, observability, and AWS deployment shape.
 
 ## Current implemented
 - FastAPI service foundation
