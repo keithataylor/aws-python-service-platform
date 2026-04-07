@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.policy import PolicyObligation
+
 AgentDecision = Literal["allow", "deny"]
 
 
@@ -18,4 +20,7 @@ class AgentActionRequest(BaseModel):
 class AgentActionDecisionResponse(BaseModel):
     decision: AgentDecision
     rationale: list[str] = Field(min_length=1)
+    obligations: list[PolicyObligation] = Field(default_factory=list)
+
+
     

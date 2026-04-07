@@ -51,6 +51,7 @@ def evaluate_agent_action(
             return AgentActionDecisionResponse(
                 decision=rule.effect,
                 rationale=[rule.rationale],
+                obligations=rule.obligations,
             )
 
     default_rationale = (
@@ -62,4 +63,5 @@ def evaluate_agent_action(
     return AgentActionDecisionResponse(
         decision=policy.default_decision,
         rationale=[default_rationale],
+        obligations=[],
     )

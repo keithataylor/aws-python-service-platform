@@ -52,6 +52,7 @@ def test_evaluate_agent_action_endpoint_returns_default_deny(client) -> None:
     assert response.json() == {
         "decision": "deny",
         "rationale": ["DEFAULT_DENY"],
+        "obligations": [],
     }
 
 def test_evaluate_agent_action_rejects_missing_agent_id(
@@ -86,6 +87,7 @@ def test_evaluate_agent_action_endpoint_returns_deny_for_non_matching_constraint
     assert response.json() == {
         "decision": "deny",
         "rationale": ["DEFAULT_DENY"],
+        "obligations": [],
     }
 
 
@@ -106,5 +108,6 @@ def test_evaluate_agent_action_endpoint_returns_allow_for_matching_constraint(
     assert response.json() == {
         "decision": "allow",
         "rationale": ["POLICY_ALLOW_PUBLIC_DOCS_READ"],
+        "obligations": [],
     }
 
