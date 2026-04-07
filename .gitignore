@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+# Ignore test files
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
