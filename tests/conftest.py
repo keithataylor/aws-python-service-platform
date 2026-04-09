@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.api.deps import get_agent_policy
-from app.policy.models import AgentPolicyDocument
+from app.policy.models import PolicyDocument
 from tests.factories import build_test_policy
 
 # Adjust this import to match where your FastAPI app actually lives.
@@ -11,13 +11,13 @@ from app.main import app
 
 
 @pytest.fixture
-def test_policy() -> AgentPolicyDocument:
+def test_policy() -> PolicyDocument:
     return build_test_policy()
 
 
 @pytest.fixture
-def override_agent_policy(test_policy: AgentPolicyDocument):
-    def _override_get_agent_policy() -> AgentPolicyDocument:
+def override_agent_policy(test_policy: PolicyDocument):
+    def _override_get_agent_policy() -> PolicyDocument:
         return test_policy
 
     app.dependency_overrides[get_agent_policy] = _override_get_agent_policy

@@ -1,14 +1,20 @@
 """Agent policy decision service."""
 
-from app.schemas.agent_action import AgentActionDecisionResponse, AgentActionRequest
-from app.policy.models import AgentPolicyRule, PolicyConstraint, AgentPolicyDocument
+from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
+from app.policy.models import PolicyRule, PolicyConstraint, PolicyDocument
 
 
 def _constraint_matches(
     constraint: PolicyConstraint,
-    parameters: dict[str, object],
+    payload: InvocationDecisionRequest,
 ) -> bool:
-    actual_value = parameters.get(constraint.parameter)
+    
+    if constraint.source == "parameters":
+        actual_value = payload.parameters.get(constraint.field)
+    elif constraint.source == "context":
+        actual_value = payload.context.get(constraint.field)  
+        
+    print(f"Evaluating constraint: source={constraint.source}, field={constraint.field}, value={constraint.value}, actual_value={actual_value}")
 
     if constraint.operator == "equals":
         return actual_value == constraint.value
@@ -18,40 +24,47 @@ def _constraint_matches(
 
     if constraint.operator == "not_in":
         return actual_value not in constraint.value
+    
+  
 
     return False
 
 
 def _rule_matches(
-    rule: AgentPolicyRule,
-    payload: AgentActionRequest,
+    rule: PolicyRule,
+    payload: InvocationDecisionRequest,
 ) -> bool:
-    if rule.tool_name != payload.tool_name:
+    if rule.when.tool_name != payload.tool_name:     
         return False
 
-    if rule.action != payload.action:
+    if rule.when.server_name != payload.server_name:
+        return False
+    
+    if rule.when.action != payload.action:
         return False
 
-    if rule.resource != payload.resource:
+    if rule.when.resource != payload.resource:
         return False
+    
+
 
     return all(
-        _constraint_matches(constraint, payload.parameters)
-        for constraint in rule.constraints
+        _constraint_matches(constraint, payload)
+        for constraint in rule.when.constraints
     )
 
 
 def evaluate_agent_action(
-        payload: AgentActionRequest, 
-        policy: AgentPolicyDocument
-        ) -> AgentActionDecisionResponse:  
+        payload: InvocationDecisionRequest, 
+        policy: PolicyDocument
+        ) -> InvocationDecisionResponse:  
 
-    for rule in policy.rules:
+    for rule in policy.rules:  
         if _rule_matches(rule, payload):
-            return AgentActionDecisionResponse(
-                decision=rule.effect,
-                rationale=[rule.rationale],
-                obligations=rule.obligations,
+            return InvocationDecisionResponse(
+                decision=rule.then.effect,
+                rationale=[rule.then.rationale],
+                obligations=rule.then.obligations,
             )
 
     default_rationale = (
@@ -60,7 +73,7 @@ def evaluate_agent_action(
         else "POLICY_DEFAULT_ALLOW"
     )
 
-    return AgentActionDecisionResponse(
+    return InvocationDecisionResponse(
         decision=policy.default_decision,
         rationale=[default_rationale],
         obligations=[],

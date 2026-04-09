@@ -2,12 +2,12 @@
 import yaml
 
 from app.core.config import POLICY_FILE
-from app.policy.models import AgentPolicyDocument
+from app.policy.models import PolicyDocument
 
 
-def load_agent_policy() -> AgentPolicyDocument:
+def load_agent_policy() -> PolicyDocument:
     with POLICY_FILE.open("r", encoding="utf-8") as file:
         data = yaml.safe_load(file)
 
-    return AgentPolicyDocument.model_validate(data)
+    return PolicyDocument.model_validate(data)
 

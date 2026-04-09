@@ -9,15 +9,18 @@ from app.policy.models import PolicyObligation
 AgentDecision = Literal["allow", "deny"]
 
 
-class AgentActionRequest(BaseModel):
-    agent_id: str = Field(min_length=1, max_length=100)
-    tool_name: str = Field(min_length=1, max_length=100)
-    action: str = Field(min_length=1, max_length=100)
-    resource: str = Field(min_length=1, max_length=100)
+class InvocationDecisionRequest(BaseModel):
+    request_id: str
+    agent_id: str
+    server_name: str
+    tool_name: str
+    action: str
+    resource: str
     parameters: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=dict)
 
 
-class AgentActionDecisionResponse(BaseModel):
+class InvocationDecisionResponse(BaseModel):
     decision: AgentDecision
     rationale: list[str] = Field(min_length=1)
     obligations: list[PolicyObligation] = Field(default_factory=list)

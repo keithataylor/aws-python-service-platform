@@ -155,13 +155,22 @@ This structure may evolve, but the project is intended to keep application code,
 This project is evolving toward an AI agent runtime policy decision point (PDP) for tool-call authorization.
 
 Current focus:
-- structured agent action requests
+- normalized internal decision requests for agent tool invocations
 - externalized policy in YAML
-- deterministic allow/deny evaluation
-- clean separation between API layer and policy service logic
+- deterministic policy evaluation with explicit rationale and obligations
+- clean separation between proxy/PEP concerns and PDP evaluation logic
+- policy subsystem structure with dedicated loading, models, and evaluation components
 
 Planned direction:
-- richer policy constraints and obligations
-- audit/event records for decisions
-- future proxy/PEP layer for tool-call enforcement
-- backend persistence and async patterns where they support policy enforcement workflows
+- remote MCP proxy acting as the execution-path PEP
+- interception and normalization of MCP tool calls before PDP evaluation
+- audit/event records for decisions and enforcement actions
+- backend persistence and async/concurrency patterns where they support enforcement workflows
+- future scoped/ephemeral credential brokerage aligned to policy decisions
+
+Proxy boundary:
+- The proxy presents as a remote MCP server to standard MCP clients.
+- Agents/hosts are configured to call the proxy as their MCP endpoint.
+- The proxy intercepts MCP tool invocations and normalizes them.
+- The PDP evaluates only normalized internal decision requests, not raw MCP payloads.
+- If allowed, the proxy enforces the result and forwards the call onward.

@@ -1,26 +1,32 @@
-from app.policy.models import AgentPolicyDocument, AgentPolicyRule, PolicyConstraint
+from app.policy.models import PolicyDocument, PolicyRule, PolicyConstraint, PolicyRuleMeta, PolicyThen, PolicyWhen
 
-
-def build_test_policy() -> AgentPolicyDocument:
-    return AgentPolicyDocument(
+def build_test_policy() -> PolicyDocument:
+    return PolicyDocument(
         version="1.0",
         default_decision="deny",
         rules=[
-            AgentPolicyRule(
+            PolicyRule(
                 rule_id="allow_public_docs_read",
-                effect="allow",
-                tool_name="docs_tool",
-                action="tool.read",
-                resource="public.docs",
-                rationale="POLICY_ALLOW_PUBLIC_DOCS_READ",
-                constraints=[
-                    PolicyConstraint(
-                        parameter="document_visibility",
-                        operator="equals",
-                        value="public",
-                    )
-                ],
-                obligations=[],
+                when=PolicyWhen(
+                    tool_name="docs_tool",
+                    server_name="docs_mcp",
+                    action="tool.read",
+                    resource="public.docs",
+                    constraints=[
+                        PolicyConstraint(
+                            source="parameters",
+                            field="document_visibility",
+                            operator="equals",
+                            value="public",
+                        )
+                    ]
+                ),
+                then=PolicyThen(
+                    effect="allow",
+                    rationale="POLICY_ALLOW_PUBLIC_DOCS_READ",
+                    obligations=[],
+                ),
+                meta=PolicyRuleMeta(description="Allow reading public documents with docs_tool"),
             )
         ],
     )

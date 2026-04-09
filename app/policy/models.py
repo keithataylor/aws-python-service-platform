@@ -8,10 +8,12 @@ from pydantic import BaseModel, Field
 PolicyEffect = Literal["allow", "deny"]
 PolicyDecision = Literal["allow", "deny"]
 ConstraintOperator = Literal["equals", "in", "not_in"]
+SourceType = Literal["parameters", "context"]
 
 
 class PolicyConstraint(BaseModel):
-    parameter: str = Field(min_length=1, max_length=100)
+    source: SourceType
+    field: str = Field(min_length=1, max_length=100)
     operator: ConstraintOperator
     value: Any
 
@@ -21,23 +23,32 @@ class PolicyObligation(BaseModel):
     parameters: dict[str, Any] = Field(default_factory=dict)
 
 
-class AgentPolicyRuleMeta(BaseModel):
-    description: str | None = None
-
-
-class AgentPolicyRule(BaseModel):
-    rule_id: str = Field(min_length=1, max_length=100)
-    effect: PolicyEffect
-    tool_name: str = Field(min_length=1, max_length=100)
-    action: str = Field(min_length=1, max_length=100)
-    resource: str = Field(min_length=1, max_length=100)
-    rationale: str = Field(min_length=1, max_length=100)
-    meta: AgentPolicyRuleMeta | None = None
+class PolicyWhen(BaseModel):
+    server_name: str | None = None
+    tool_name: str
+    action: str
+    resource: str
     constraints: list[PolicyConstraint] = Field(default_factory=list)
+
+class PolicyThen(BaseModel):
+    effect: PolicyEffect
+    rationale: str
     obligations: list[PolicyObligation] = Field(default_factory=list)
 
 
-class AgentPolicyDocument(BaseModel):
+class PolicyRuleMeta(BaseModel):
+    description: str | None = None
+
+
+class PolicyRule(BaseModel):
+    rule_id: str = Field(min_length=1, max_length=100)
+    when: PolicyWhen
+    then: PolicyThen
+    meta: PolicyRuleMeta | None = None
+
+
+class PolicyDocument(BaseModel):
     version: str = Field(min_length=1, max_length=20)
     default_decision: PolicyDecision
-    rules: list[AgentPolicyRule] = Field(default_factory=list)
+    rules: list[PolicyRule] = Field(default_factory=list)
+

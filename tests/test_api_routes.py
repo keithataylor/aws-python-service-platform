@@ -41,11 +41,14 @@ def test_evaluate_agent_action_endpoint_returns_default_deny(client) -> None:
     response = client.post(
         "/api/v1/agent-actions/evaluate",
         json={
+            "request_id": "request-123",
             "agent_id": "agent-123",
+            "server_name": "server-123",
             "tool_name": "crm_tool",
             "action": "tool.call",
             "resource": "crm.contacts",
             "parameters": {},
+            "context": {},
         },
     )
     assert response.status_code == 200
@@ -61,10 +64,13 @@ def test_evaluate_agent_action_rejects_missing_agent_id(
     response = client.post(
         "/api/v1/agent-actions/evaluate",
         json={
+            "request_id": "request-123",
+            "server_name": "server-123",
             "tool_name": "crm_tool",
             "action": "tool.call",
             "resource": "crm.contacts",
             "parameters": {},
+            "context": {},
         },
     )
     assert response.status_code == 422
@@ -76,11 +82,14 @@ def test_evaluate_agent_action_endpoint_returns_deny_for_non_matching_constraint
     response = client.post(
         "/api/v1/agent-actions/evaluate",
         json={
+            "request_id": "request-123",
             "agent_id": "agent-123",
+            "server_name": "server-123",
             "tool_name": "docs_tool",
             "action": "tool.read",
             "resource": "public.docs",
             "parameters": {"document_visibility": "unknown"},
+            "context": {},
         }
     )
     assert response.status_code == 200
@@ -97,11 +106,14 @@ def test_evaluate_agent_action_endpoint_returns_allow_for_matching_constraint(
     response = client.post(
         "/api/v1/agent-actions/evaluate",
         json={
+            "request_id": "request-123",
             "agent_id": "agent-123",
+            "server_name": "docs_mcp",
             "tool_name": "docs_tool",
             "action": "tool.read",
             "resource": "public.docs",
             "parameters": {"document_visibility": "public"},
+            "context": {"user_role": "reader"},
         }
     )
     assert response.status_code == 200
