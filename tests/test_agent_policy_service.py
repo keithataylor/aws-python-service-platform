@@ -2,12 +2,12 @@ from urllib import request
 
 from app.policy.models import PolicyConstraint, PolicyDocument, PolicyObligation, PolicyRule, PolicyRuleMeta, PolicyThen, PolicyWhen
 from app.schemas.invocation import AgentDecision, InvocationDecisionRequest
-from app.policy.evaluator import evaluate_agent_action
+from app.policy.evaluator import pdp_evaluate_agent_action
 from tests.factories import build_test_policy
 
 def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -> None:
     
-    response = evaluate_agent_action(
+    response = pdp_evaluate_agent_action(
         InvocationDecisionRequest(
             request_id="request-123",
             agent_id="agent-123",
@@ -26,7 +26,7 @@ def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -
 
 def test_evaluate_agent_action_service_returns_deny_for_non_matching_constraint() -> None:
   
-    response = evaluate_agent_action(
+    response = pdp_evaluate_agent_action(
         InvocationDecisionRequest(
             request_id="request-123",
             agent_id="agent-123",
@@ -44,7 +44,7 @@ def test_evaluate_agent_action_service_returns_deny_for_non_matching_constraint(
 
 
 def test_evaluate_server_name_participates_in_policy_evaluation() -> None:
-    response = evaluate_agent_action(
+    response = pdp_evaluate_agent_action(
         InvocationDecisionRequest(
             request_id="request-123",
             agent_id="agent-123",
@@ -63,7 +63,7 @@ def test_evaluate_server_name_participates_in_policy_evaluation() -> None:
 
 
 def test_evaluate_returns_first_matching_policy() -> None:
-    response = evaluate_agent_action(
+    response = pdp_evaluate_agent_action(
         InvocationDecisionRequest(
             request_id="request-123",
             agent_id="agent-123",
@@ -178,7 +178,7 @@ def test_evaluate_invokes_context_parameters() -> None:
                 )
             ],
         )
-    response = evaluate_agent_action( invocation_request, policy_document)
+    response = pdp_evaluate_agent_action( invocation_request, policy_document)
     
     assert response.decision == "allow"
     assert response.rationale == ["POLICY_ALLOW_READERS_TO_READ_PUBLIC_DOCS"]
@@ -194,7 +194,7 @@ def test_evaluate_invokes_context_parameters() -> None:
             context={"user_role": "writer"},
         )
 
-    response = evaluate_agent_action( invocation_request, policy_document)
+    response = pdp_evaluate_agent_action( invocation_request, policy_document)
 
     assert response.decision == "deny"
     assert response.rationale == ["DEFAULT_DENY"]

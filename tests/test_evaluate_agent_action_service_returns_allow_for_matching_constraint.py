@@ -1,11 +1,11 @@
 
 from app.schemas.invocation import InvocationDecisionRequest
-from app.policy.evaluator import evaluate_agent_action
+from app.policy.evaluator import pdp_evaluate_agent_action
 from tests.factories import build_test_policy   
 
 
 def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -> None:
-    response = evaluate_agent_action(
+    response = pdp_evaluate_agent_action(
         InvocationDecisionRequest(
             request_id="request-123",
             agent_id="agent-123",

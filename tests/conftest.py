@@ -7,7 +7,7 @@ from tests.factories import build_test_policy
 
 # Adjust this import to match where your FastAPI app actually lives.
 # If main.py is repo root, use: from main import app
-from app.main import app
+from app.main import app, mcp_app
 
 
 @pytest.fixture
@@ -31,3 +31,8 @@ def override_agent_policy(test_policy: PolicyDocument):
 def client():
     with TestClient(app) as client:
         yield client
+
+@pytest.fixture
+def mcp_client():
+    with TestClient(mcp_app) as mcp_client:
+        yield mcp_client

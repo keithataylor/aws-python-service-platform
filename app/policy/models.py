@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 PolicyEffect = Literal["allow", "deny"]
@@ -12,6 +12,7 @@ SourceType = Literal["parameters", "context"]
 
 
 class PolicyConstraint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     source: SourceType
     field: str = Field(min_length=1, max_length=100)
     operator: ConstraintOperator
@@ -24,6 +25,7 @@ class PolicyObligation(BaseModel):
 
 
 class PolicyWhen(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     server_name: str | None = None
     tool_name: str
     action: str
@@ -31,6 +33,7 @@ class PolicyWhen(BaseModel):
     constraints: list[PolicyConstraint] = Field(default_factory=list)
 
 class PolicyThen(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     effect: PolicyEffect
     rationale: str
     obligations: list[PolicyObligation] = Field(default_factory=list)
@@ -41,6 +44,7 @@ class PolicyRuleMeta(BaseModel):
 
 
 class PolicyRule(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     rule_id: str = Field(min_length=1, max_length=100)
     when: PolicyWhen
     then: PolicyThen
@@ -48,6 +52,7 @@ class PolicyRule(BaseModel):
 
 
 class PolicyDocument(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     version: str = Field(min_length=1, max_length=20)
     default_decision: PolicyDecision
     rules: list[PolicyRule] = Field(default_factory=list)

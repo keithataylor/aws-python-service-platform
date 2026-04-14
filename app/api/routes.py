@@ -6,7 +6,7 @@ from app.schemas.echo import EchoRequest, EchoResponse
 from app.schemas.task import TaskSubmitRequest, TaskSubmitResponse, TaskStatusResponse
 from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
 from app.services.task_service import get_task_status, submit_task
-from app.policy.evaluator import evaluate_agent_action
+from app.policy.evaluator import pdp_evaluate_agent_action
 from app.api.deps import get_agent_policy
 
 from app.core.config import APP_VERSION, SERVICE_NAME
@@ -57,4 +57,4 @@ async def evaluate_agent_action_endpoint(
     policy: Annotated[PolicyDocument, Depends(get_agent_policy)],
 ) -> InvocationDecisionResponse:
     """Evaluate an agent action request."""
-    return evaluate_agent_action(payload, policy)
+    return pdp_evaluate_agent_action(payload, policy)

@@ -1,0 +1,1 @@
+MCP_SERVER_NAME = "agent_runtime_mcp"

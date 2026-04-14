@@ -13,8 +13,8 @@ def _constraint_matches(
         actual_value = payload.parameters.get(constraint.field)
     elif constraint.source == "context":
         actual_value = payload.context.get(constraint.field)  
+
         
-    print(f"Evaluating constraint: source={constraint.source}, field={constraint.field}, value={constraint.value}, actual_value={actual_value}")
 
     if constraint.operator == "equals":
         return actual_value == constraint.value
@@ -24,8 +24,6 @@ def _constraint_matches(
 
     if constraint.operator == "not_in":
         return actual_value not in constraint.value
-    
-  
 
     return False
 
@@ -41,12 +39,12 @@ def _rule_matches(
         return False
     
     if rule.when.action != payload.action:
+        print(f"Action does not match: expected={rule.when.action}, actual={payload.action}")
         return False
 
     if rule.when.resource != payload.resource:
+        print(f"Resource does not match: expected={rule.when.resource}, actual={payload.resource}")
         return False
-    
-
 
     return all(
         _constraint_matches(constraint, payload)
@@ -54,7 +52,7 @@ def _rule_matches(
     )
 
 
-def evaluate_agent_action(
+def pdp_evaluate_agent_action(
         payload: InvocationDecisionRequest, 
         policy: PolicyDocument
         ) -> InvocationDecisionResponse:  
@@ -66,7 +64,7 @@ def evaluate_agent_action(
                 rationale=[rule.then.rationale],
                 obligations=rule.then.obligations,
             )
-
+        
     default_rationale = (
         "DEFAULT_DENY"
         if policy.default_decision == "deny"

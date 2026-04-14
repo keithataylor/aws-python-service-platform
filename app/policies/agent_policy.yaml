@@ -4,12 +4,12 @@ default_decision: deny
 rules:
   - rule_id: allow_public_docs_read
     when:
-      server_name: docs_mcp
+      server_name: agent_runtime_mcp
       tool_name: docs_tool
-      action: tool.read
-      resource: public.docs
+      action: document.read
+      resource: document
       constraints:
-        - source: parameters
+        - source: context
           field: document_visibility
           operator: equals
           value: public
@@ -21,3 +21,16 @@ rules:
           parameters:
             level: decision
 
+  - rule_id: allow_docs_search
+    when:
+      server_name: agent_runtime_mcp
+      tool_name: list_documents
+      action: document.search
+      resource: document
+    then:
+      effect: allow
+      rationale: POLICY_ALLOW_DOCS_SEARCH
+      obligations:
+        - obligation_type: audit_log
+          parameters:
+            level: decision

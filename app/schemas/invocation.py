@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.policy.models import PolicyObligation
 
@@ -10,6 +10,7 @@ AgentDecision = Literal["allow", "deny"]
 
 
 class InvocationDecisionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     request_id: str
     agent_id: str
     server_name: str
@@ -21,6 +22,7 @@ class InvocationDecisionRequest(BaseModel):
 
 
 class InvocationDecisionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     decision: AgentDecision
     rationale: list[str] = Field(min_length=1)
     obligations: list[PolicyObligation] = Field(default_factory=list)
