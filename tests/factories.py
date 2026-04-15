@@ -1,4 +1,7 @@
-from app.policy.models import PolicyDocument, PolicyRule, PolicyConstraint, PolicyRuleMeta, PolicyThen, PolicyWhen
+from app.policy.models import (
+    PolicyDocument, PolicyRule, PolicyConstraint, 
+    PolicyRuleMeta, PolicyThen, PolicyWhen
+)
 
 def build_test_policy() -> PolicyDocument:
     return PolicyDocument(

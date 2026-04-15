@@ -1,7 +1,8 @@
-from urllib import request
-
-from app.policy.models import PolicyConstraint, PolicyDocument, PolicyObligation, PolicyRule, PolicyRuleMeta, PolicyThen, PolicyWhen
-from app.schemas.invocation import AgentDecision, InvocationDecisionRequest
+from app.policy.models import (
+    PolicyConstraint, PolicyDocument, PolicyObligation, 
+    PolicyRule, PolicyRuleMeta, PolicyThen, PolicyWhen
+)
+from app.schemas.invocation import InvocationDecisionRequest
 from app.policy.evaluator import pdp_evaluate_agent_action
 from tests.factories import build_test_policy
 
@@ -135,15 +136,15 @@ def test_evaluate_returns_first_matching_policy() -> None:
 
 def test_evaluate_invokes_context_parameters() -> None:
     invocation_request = InvocationDecisionRequest(
-            request_id="request-123",
-            agent_id="agent-123",
-            server_name="docs_mcp",
-            tool_name="docs_tool",
-            action="tool.read",
-            resource="public.docs",
-            parameters={},
-            context={"user_role": "reader"},
-        )
+        request_id="request-123",
+        agent_id="agent-123",
+        server_name="docs_mcp",
+        tool_name="docs_tool",
+        action="tool.read",
+        resource="public.docs",
+        parameters={},
+        context={"user_role": "reader"},
+    )
     policy_document =PolicyDocument(
             version="1.0",
             default_decision="deny",
@@ -184,15 +185,15 @@ def test_evaluate_invokes_context_parameters() -> None:
     assert response.rationale == ["POLICY_ALLOW_READERS_TO_READ_PUBLIC_DOCS"]
 
     invocation_request = InvocationDecisionRequest(
-            request_id="request-123",
-            agent_id="agent-123",
-            server_name="docs_mcp",
-            tool_name="docs_tool",
-            action="tool.read",
-            resource="public.docs",
-            parameters={},
-            context={"user_role": "writer"},
-        )
+        request_id="request-123",
+        agent_id="agent-123",
+        server_name="docs_mcp",
+        tool_name="docs_tool",
+        action="tool.read",
+        resource="public.docs",
+        parameters={},
+        context={"user_role": "writer"},
+    )
 
     response = pdp_evaluate_agent_action( invocation_request, policy_document)
 

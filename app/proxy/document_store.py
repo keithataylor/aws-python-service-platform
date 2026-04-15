@@ -1,51 +1,62 @@
-
 from typing import Any
 
-
-DICT_LIST = [
-    {"document_id": "doc1", "title": "Document 1", "summary": "Summary of document 1", "metadata": {"document_visibility": "public"}},
-    {"document_id": "doc2", "title": "Document 2", "summary": "Summary of document 2", "metadata": {"document_visibility": "private"}},
-    {"document_id": "doc3", "title": "Document 3", "summary": "Summary of document 3", "metadata": {"document_visibility": "public"}},
-    {"document_id": "doc4", "title": "Document 4", "summary": "Summary of document 4", "metadata": {"document_visibility": "private"}},
-]
+from app.db.connection import get_db_connection
 
 
 def get_document_metadata(document_id: str) -> dict:
-  # Placeholder for document metadata retrieval logic
-  # In a real implementation, this would involve looking up the document's metadata based on its ID
-  for doc in DICT_LIST:
-    if doc["document_id"] == document_id:
-      return doc["metadata"]
 
-  raise ValueError(f"Document with ID {document_id} not found")
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            result = cursor.execute(
+                "SELECT document_visibility FROM documents WHERE document_id = %s",
+                (document_id,)
+            ).fetchone()
+
+    if result:
+        return {"document_visibility": result[0]}
+
+    raise ValueError(f"Document with ID {document_id} not found")
+
 
 
 def get_document_by_id(document_id: str) -> dict[str, Any]:
 
-  for doc in DICT_LIST:   
-    if doc["document_id"] == document_id: 
-      return doc
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            result = cursor.execute(
+                "SELECT document_id, title, body FROM documents WHERE document_id = %s",
+                (document_id,)
+            ).fetchone()
+
+    if result:
+        return {
+            "document_id": result[0], 
+            "title": result[1], 
+            "body": result[2]
+            }
       
-  raise ValueError(f"Document with ID {document_id} not found")
+    raise ValueError(f"Document with ID {document_id} not found")
 
 
 def search_documents(query: str) -> list[dict[str, Any]]:
-  # Placeholder for document search logic
-  # In a real implementation, this would involve searching the document store based on the query
+    
+    results = []
 
-  # If query is empty, return all documents that are publicly visible only
-  results = []
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            if not query:
+                results = cursor.execute(
+                    "SELECT document_id, title, summary FROM documents WHERE document_visibility = 'public'"
+                ).fetchall()
+            else:
+                results = cursor.execute(
+                    "SELECT document_id, title, summary FROM documents WHERE document_visibility = 'public' AND (title ILIKE %s OR summary ILIKE %s)",
+                    (f"%{query}%", f"%{query}%")
+                ).fetchall()
+            
+            results_list = [
+                {"document_id": row[0], "title": row[1], "summary": row[2]}
+                for row in results
+            ]
+            return results_list
 
-  if not query:
-    results = [doc for doc in DICT_LIST if doc["metadata"]["document_visibility"] == "public"]
-    return results
-
-  for doc in DICT_LIST:
-    if query.lower() in doc["title"].lower() or query.lower() in doc["summary"].lower():
-      results.append(doc)
-
-  if results:
-    return results
-  else:
-    return [{"error": f"No documents found matching the query: {query}"}]
-  

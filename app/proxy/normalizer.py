@@ -1,9 +1,10 @@
 from typing import Any
 from uuid import uuid4
+
 from app.schemas.invocation import InvocationDecisionRequest
 
 
-def normalize_mcp_request(
+def normalize_tool_invocation(
     *,
     agent_id: str,
     server_name: str,

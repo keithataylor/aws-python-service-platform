@@ -48,9 +48,9 @@ async def get_task_status_endpoint(task_id: str) -> TaskStatusResponse:
 
 
 @api_v1_router.post(
-    "/agent-actions/evaluate",
-    response_model=InvocationDecisionResponse,
-    status_code=200,
+        "/agent-actions/evaluate",
+        response_model=InvocationDecisionResponse,
+        status_code=200,
 )
 async def evaluate_agent_action_endpoint(
     payload: InvocationDecisionRequest,

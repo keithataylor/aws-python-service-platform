@@ -14,8 +14,6 @@ def _constraint_matches(
     elif constraint.source == "context":
         actual_value = payload.context.get(constraint.field)  
 
-        
-
     if constraint.operator == "equals":
         return actual_value == constraint.value
 

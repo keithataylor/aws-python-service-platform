@@ -1,6 +1,6 @@
 from app.proxy.ducument_actions import build_docs_tool_context, process_list_documents_request
 from app.proxy.ducument_actions import process_documents_retrieval_request
-from app.proxy.document_store import get_document_metadata
+
 
 TOOL_SPECS = {
     "list_documents": {

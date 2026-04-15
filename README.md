@@ -1,6 +1,6 @@
 # aws-python-service-platform
 
-Production-style Python backend service portfolio project evolving toward an AI agent runtime policy decision point (PDP).
+Production-style Python backend service portfolio project evolving toward an MCP-facing AI agent runtime policy decision point (PDP) and proxy-style enforcement surface.
 
 This repository is being built to demonstrate practical backend and platform engineering capability relevant to Python/AWS service roles and emerging agent-runtime control-plane work, including:
 
@@ -8,6 +8,7 @@ This repository is being built to demonstrate practical backend and platform eng
 - typed request/response and schema validation
 - deterministic policy evaluation
 - clean service layering and dependency boundaries
+- MCP-facing proxy / PEP / PDP separation
 - PostgreSQL-backed persistence design
 - Redis-backed state/caching patterns
 - async/background execution and concurrency fundamentals
@@ -19,69 +20,97 @@ This repository is being built to demonstrate practical backend and platform eng
 
 The aim is to show hands-on engineering work beyond a simple stateless API, with emphasis on service structure, validation, policy control, persistence, reliability, and operational clarity.
 
-The repository’s core application direction is an AI agent runtime PDP:
-it evaluates structured agent action requests against human-owned policy and returns deterministic allow/deny decisions.
+The repository’s core application direction is now an MCP-facing agent runtime control surface:
 
-At the same time, the project is also intentionally being used to demonstrate broader backend/platform engineering depth, including data modelling, persistence, async workflows, observability, and deployable service structure.
+- a remote MCP client calls the mounted `/mcp` endpoint
+- FastMCP handles the raw MCP/JSON-RPC boundary
+- thin tool entrypoints hand off to a proxy wrapper
+- the proxy normalizes a tool invocation into an internal decision request
+- the PDP evaluates the normalized request against human-authored YAML policy
+- if allowed, the proxy executes the tool-specific business action
+- if denied, the proxy returns a denied MCP tool result
 
-It is not intended as a product launch.  
+This is not intended as a product launch.
 It is intended as evidence of implementation capability.
 
-## v1 Scope
+## Current implemented shape
 
-Version 1 is focused on establishing a credible PDP-style backend service foundation:
+The current implemented slice includes:
 
-- FastAPI service with clean application structure
-- typed schemas for agent action requests and responses
-- externalised policy loading and validation
-- deterministic allow/deny evaluation
-- route-layer dependency injection with service-layer separation
-- structured error handling and request validation
-- health/readiness endpoints
-- structured logging
-- Docker-based local development
-- automated CI checks for tests, linting, type checking, and container build validation
+- FastAPI application foundation
+- mounted FastMCP `/mcp` surface
+- externalized YAML policy loading and validation
+- normalized internal invocation decision model
+- deterministic allow/deny evaluation with rationale and obligations
+- proxy wrapper controlling pre-PDP enrichment and post-allow execution
+- tool registry/spec mapping tool name to static policy metadata and handlers
+- seeded in-memory document store used as the trusted source for current document search/read flow
+- MCP tools for:
+  - `list_documents`
+  - `docs_tool`
 
-## v1 Service Shape
+## Current MCP proxy flow
 
-Version 1 is centered on a policy decision service for agent/runtime actions:
+The current runtime flow is:
 
-- a caller submits a structured agent action request
-- the API validates the request shape
-- the route resolves the active policy document
-- the policy service evaluates the request against deterministic rules
-- the service returns an explicit allow/deny decision with rationale
+1. MCP client calls `/mcp`
+2. FastMCP parses and routes the tool invocation
+3. Tool entrypoint passes `tool_name` and `tool_arguments` into the proxy wrapper
+4. Proxy resolves static tool policy metadata (`action`, `resource`)
+5. Tool-specific pre-PDP enrichment derives trusted context where required
+6. Proxy normalizes the invocation into `InvocationDecisionRequest`
+7. PDP evaluates against YAML policy
+8. On allow, tool-specific post-allow business logic runs
+9. On deny, the proxy returns a denied MCP result
 
-This design is intended to demonstrate realistic backend concerns such as schema ownership, dependency boundaries, deterministic service logic, policy-as-data validation, and operational discipline.
+## Current policy model
 
-It also creates the base for later backend expansion where justified, including persistence, audit storage, async enforcement workflows, and proxy-style mediation.
+Current policy semantics are intentionally simple:
 
-## Planned Tech Stack
+- rules are evaluated top-to-bottom
+- first matching rule wins
+- `default_decision` applies if nothing matches
+- `parameters` represent caller-supplied tool inputs
+- `context` represents trusted derived facts
 
-This project is currently centered on:
+For the current document example:
 
-- **FastAPI**
-- **Pydantic**
-- **YAML-based policy documents**
-- **Docker**
-- **GitHub Actions**
-- **structured application logging**
+- `list_documents(query)` uses caller input in `parameters`
+- `docs_tool(document_id)` uses caller input in `parameters`
+- trusted `document_visibility` is derived from the document store and supplied in `context`
 
-Later-phase backend/platform expansion may include:
+## Current document example
 
-- **PostgreSQL**
-- **SQLAlchemy**
-- **Alembic**
-- **Redis**
-- **background worker / queue patterns**
-- **metrics / observability tooling**
+The current seeded document flow is deliberately small but end-to-end:
+
+- `list_documents(query)` searches title/summary over the in-memory document set
+- only public documents are returned in search results
+- `docs_tool(document_id)` derives trusted visibility metadata before PDP evaluation
+- if allowed, the selected document is returned
+- if denied, the tool returns an MCP error result shape
+
+This is intentionally a controlled in-memory implementation so that the mechanism is visible before the data source is replaced with PostgreSQL.
+
+## Planned next phase
+
+The next major step is to replace the in-memory document store with PostgreSQL-backed persistence while keeping the proxy/PDP flow and MCP result shapes stable.
+
+Expected next-phase backend work includes:
+
+- PostgreSQL
+- SQLAlchemy
+- Alembic
+- typed persistence models for documents, policy-relevant metadata, and later audit/event records
+- authentication wiring at the FastMCP boundary
+- async/concurrency patterns where they support enforcement workflows
 
 ## Boundaries
 
 This project is intentionally focused.
 
-It is not intended in v1 to be:
+It is not currently trying to be:
 
+- a custom MCP framework implementation
 - a multi-service system
 - a Kubernetes-first project
 - a full SaaS product
@@ -89,88 +118,64 @@ It is not intended in v1 to be:
 - a feature-heavy end-user application
 
 The emphasis is on doing a smaller set of backend/platform concerns properly:
+
+- proxy / PDP separation
+- trustworthy policy inputs
 - persistence
 - authentication
-- background processing
 - cache/state handling
 - observability
 - containerisation
 - CI discipline
 
-## Status
+## Current repository direction
 
-This repository is in active build-out as a portfolio project focused on backend and platform engineering depth.
-
-## Current repository structure
+A representative current structure is:
 
 ```text
 aws-python-service-platform/
 ├─ app/
 │  ├─ main.py
-│  ├─ api/
-│  │  ├─ deps.py
-│  │  └─ routes.py
-│  ├─ core/
+│  ├─ policy/
+│  │  ├─ evaluator.py
+│  │  ├─ loader.py
+│  │  └─ models.py
+│  ├─ proxy/
 │  │  ├─ config.py
-│  │  └─ policy_loader.py
-│  ├─ models/
-│  ├─ policies/
-│  │  └─ agent_policy.yaml
+│  │  ├─ wrapper.py
+│  │  ├─ normalizer.py
+│  │  ├─ tool_registry.py
+│  │  ├─ document_store.py
+│  │  └─ document_actions.py
 │  ├─ schemas/
-│  │  ├─ agent_action.py
-│  │  ├─ echo.py
-│  │  ├─ policy.py
-│  │  ├─ system.py
-│  │  └─ task.py
-│  ├─ services/
-│  │  ├─ agent_policy_service.py
-│  │  └─ task_service.py
-│  └─ workers/
-├─ docker/
+│  │  └─ invocation.py
+│  └─ ...
 ├─ docs/
-├─ migrations/
 ├─ tests/
 ├─ Dockerfile
 ├─ docker-compose.yml
 ├─ pyproject.toml
 └─ README.md
-
 ```
 
-This structure may evolve, but the project is intended to keep application code, database concerns, worker logic, tests, CI, and supporting documentation clearly separated.
+The exact structure may continue to evolve, but the intended separation is now clearer:
 
-## Current endpoints
+- FastMCP boundary in `main.py`
+- policy subsystem in `app/policy/`
+- proxy orchestration in `app/proxy/wrapper.py`
+- tool registry in `app/proxy/tool_registry.py`
+- domain data access in `app/proxy/document_store.py`
+- post-allow business actions in domain-specific action modules
+
+## Current endpoints and surfaces
 
 - `GET /health` — operational health check
 - `GET /api/v1/service-info` — basic service metadata
-- `POST /api/v1/echo` — typed request/response example with validation
-- `POST /api/v1/tasks` — submit a task for asynchronous-style processing
-- `GET /api/v1/tasks/{task_id}` — retrieve current task status
-- `POST /api/v1/agent-actions/evaluate` — evaluate a structured agent action against deterministic policy
+- mounted MCP surface at `/mcp`
+- current MCP tools:
+  - `list_documents`
+  - `docs_tool`
 
+## Status
 
-
-## Architecture direction
-
-This project is evolving toward an AI agent runtime policy decision point (PDP) for tool-call authorization.
-
-Current focus:
-- normalized internal decision requests for agent tool invocations
-- externalized policy in YAML
-- deterministic policy evaluation with explicit rationale and obligations
-- clean separation between proxy/PEP concerns and PDP evaluation logic
-- policy subsystem structure with dedicated loading, models, and evaluation components
-
-Planned direction:
-- remote MCP proxy acting as the execution-path PEP
-- interception and normalization of MCP tool calls before PDP evaluation
-- audit/event records for decisions and enforcement actions
-- backend persistence and async/concurrency patterns where they support enforcement workflows
-- future scoped/ephemeral credential brokerage aligned to policy decisions
-
-Proxy boundary:
-- The proxy presents as a remote MCP server to standard MCP clients.
-- Agents/hosts are configured to call the proxy as their MCP endpoint.
-- The proxy intercepts MCP tool invocations and normalizes them.
-- The PDP evaluates only normalized internal decision requests, not raw MCP payloads.
-- If allowed, the proxy enforces the result and forwards the call onward.
+This repository is in active build-out as a portfolio project focused on backend/platform depth and MCP-adjacent agent runtime control.
