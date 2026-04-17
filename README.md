@@ -30,7 +30,7 @@ The repository’s core application direction is now an MCP-facing agent runtime
 - if allowed, the proxy executes the tool-specific business action
 - if denied, the proxy returns a denied MCP tool result
 
-This is not intended as a product launch.
+This is not intended as a product launch.  
 It is intended as evidence of implementation capability.
 
 ## Current implemented shape
@@ -44,7 +44,10 @@ The current implemented slice includes:
 - deterministic allow/deny evaluation with rationale and obligations
 - proxy wrapper controlling pre-PDP enrichment and post-allow execution
 - tool registry/spec mapping tool name to static policy metadata and handlers
-- seeded in-memory document store used as the trusted source for current document search/read flow
+- PostgreSQL-backed document store for current document search/read flow
+- local Docker Compose PostgreSQL workflow
+- rerunnable SQL migration and seed scripts
+- environment-based database configuration
 - MCP tools for:
   - `list_documents`
   - `docs_tool`
@@ -81,23 +84,88 @@ For the current document example:
 
 ## Current document example
 
-The current seeded document flow is deliberately small but end-to-end:
+The current document flow is deliberately small but end-to-end:
 
-- `list_documents(query)` searches title/summary over the in-memory document set
+- `list_documents(query)` searches title/summary over PostgreSQL-backed document data
 - only public documents are returned in search results
 - `docs_tool(document_id)` derives trusted visibility metadata before PDP evaluation
 - if allowed, the selected document is returned
 - if denied, the tool returns an MCP error result shape
 
-This is intentionally a controlled in-memory implementation so that the mechanism is visible before the data source is replaced with PostgreSQL.
+This keeps the enforcement path visible while moving persistence onto PostgreSQL.
+
+## Local database setup
+
+The project uses PostgreSQL locally via Docker Compose.
+
+### 1. Start PostgreSQL
+
+From the project root:
+
+```powershell
+docker compose up -d
+```
+
+This starts the local Postgres container defined in `docker-compose.yml`.
+
+### 2. Configure local environment variables
+
+Create a local `.env` file in the project root.
+
+Use `.env.example` as the template:
+
+```text
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=app_db
+DB_USER=app_user
+DB_PASSWORD=app_password
+```
+
+- `.env` is used locally at runtime
+- `.env.example` is the committed template
+
+### 3. Run database migrations and seed data
+
+From the project root:
+
+```powershell
+.\scripts\run-migrations.ps1
+```
+
+This runs:
+
+- `migrations/001_create_documents_table.sql`
+- `migrations/002_seed_documents.sql`
+
+The migration scripts are rerunnable locally:
+
+- table creation uses `IF NOT EXISTS`
+- seed inserts use `ON CONFLICT DO NOTHING`
+
+### 4. Verify the database contents
+
+You can inspect the seeded rows with:
+
+```powershell
+docker compose exec -T postgres psql -U app_user -d app_db -c "SELECT document_id, title, document_visibility FROM documents;"
+```
+
+## Database configuration
+
+Database connection settings are read from environment-based settings in `app/core/config.py`.
+
+This keeps the application boundary aligned with the intended AWS deployment model:
+
+- local development uses `.env`
+- production will use ECS environment variables / Secrets Manager
 
 ## Planned next phase
 
-The next major step is to replace the in-memory document store with PostgreSQL-backed persistence while keeping the proxy/PDP flow and MCP result shapes stable.
+The next major backend step is to build on the PostgreSQL-backed foundation while keeping the proxy/PDP flow and MCP result shapes stable.
 
 Expected next-phase backend work includes:
 
-- PostgreSQL
 - SQLAlchemy
 - Alembic
 - typed persistence models for documents, policy-relevant metadata, and later audit/event records
@@ -136,12 +204,15 @@ A representative current structure is:
 aws-python-service-platform/
 ├─ app/
 │  ├─ main.py
+│  ├─ core/
+│  │  └─ config.py
+│  ├─ db/
+│  │  └─ connection.py
 │  ├─ policy/
 │  │  ├─ evaluator.py
 │  │  ├─ loader.py
 │  │  └─ models.py
 │  ├─ proxy/
-│  │  ├─ config.py
 │  │  ├─ wrapper.py
 │  │  ├─ normalizer.py
 │  │  ├─ tool_registry.py
@@ -151,10 +222,13 @@ aws-python-service-platform/
 │  │  └─ invocation.py
 │  └─ ...
 ├─ docs/
+├─ migrations/
+├─ scripts/
 ├─ tests/
 ├─ Dockerfile
 ├─ docker-compose.yml
 ├─ pyproject.toml
+├─ .env.example
 └─ README.md
 ```
 
@@ -165,6 +239,8 @@ The exact structure may continue to evolve, but the intended separation is now c
 - proxy orchestration in `app/proxy/wrapper.py`
 - tool registry in `app/proxy/tool_registry.py`
 - domain data access in `app/proxy/document_store.py`
+- database connection boundary in `app/db/connection.py`
+- deployment/runtime config boundary in `app/core/config.py`
 - post-allow business actions in domain-specific action modules
 
 ## Current endpoints and surfaces
