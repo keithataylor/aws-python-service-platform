@@ -25,4 +25,4 @@ VALUES (
         'Summary of document 3',
         'Full body text for document 3.',
         'public'
-    );
+    ) ON CONFLICT (document_id) DO NOTHING;
