@@ -76,43 +76,14 @@ def test_mcp_returns_tools_list(client):
     )
 
     assert response.status_code == 200
-    assert '"jsonrpc":"2.0"' in response.text
-    assert '"id":1' in response.text
-    assert '"result":{"tools"' in response.text
-    assert '"list_documents"' in response.text
-    assert '"docs_tool"' in response.text
+    json_out = response.json()
+    assert json_out["jsonrpc"] == "2.0" 
+    assert json_out["id"] == 1
+    assert "tools" in json_out["result"]
+    tool_list = [tool["name"] for tool in json_out["result"]["tools"]]
+    assert "docs_tool" in tool_list
+    assert "list_documents" in tool_list
           
-
-def test_mcp_tools_call(client):
-    
-    init_response = client.post(test_url, json=test_json, headers=test_headers)
-
-    session_id = init_response.headers.get("Mcp-Session-Id")
-
-    response = client.post(
-       "/mcp",
-        json={
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/call",
-            "params": {
-                "name": "docs_tool", 
-                "arguments": {"document_id": "doc3"}
-                }
-        },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id
-        },
-    )
-
-    assert response.status_code == 200
-    out = response.json()
-    assert "jsonrpc" in out
-    assert out["jsonrpc"] == "2.0"
-    assert "id" in out
-    assert out["id"] == 2
 
 def test_list_documents_with_query_param_returns_document(client) -> None:
     init_response = client.post(test_url, json=test_json, headers=test_headers)
@@ -138,8 +109,8 @@ def test_list_documents_with_query_param_returns_document(client) -> None:
     )
 
     assert response.status_code == 200
-    out = response.json()
-    my_list = out["result"]["structuredContent"]["results"]
+    json_out = response.json()
+    my_list = json_out["result"]["structuredContent"]["results"]
     assert isinstance(my_list, list)
 
     for doc in my_list:
@@ -147,9 +118,9 @@ def test_list_documents_with_query_param_returns_document(client) -> None:
         assert isinstance(doc["document_id"], str)
         assert doc["document_id"]
 
-    total_match = out["result"]["structuredContent"]["total_matches"]
+    total_match = json_out["result"]["structuredContent"]["total_matches"]
     assert isinstance(total_match, int)
-    returned_count = out["result"]["structuredContent"]["returned_count"]
+    returned_count = json_out["result"]["structuredContent"]["returned_count"]
     assert isinstance(returned_count, int) and returned_count == 1
 
 
@@ -179,8 +150,8 @@ def test_list_documents_with_empty_query_returns_all_public_documents(client) ->
 
     assert response.status_code == 200
 
-    out = response.json()
-    my_list = out["result"]["structuredContent"]["results"]
+    json_out = response.json()
+    my_list = json_out["result"]["structuredContent"]["results"]
     assert isinstance(my_list, list)
 
     for doc in my_list:
@@ -188,9 +159,9 @@ def test_list_documents_with_empty_query_returns_all_public_documents(client) ->
         assert isinstance(doc["document_id"], str)
         assert doc["document_id"]
 
-    total_match = out["result"]["structuredContent"]["total_matches"]
+    total_match = json_out["result"]["structuredContent"]["total_matches"]
     assert isinstance(total_match, int)
-    returned_count = out["result"]["structuredContent"]["returned_count"]
+    returned_count = json_out["result"]["structuredContent"]["returned_count"]
     assert isinstance(returned_count, int) and returned_count >= 1
    
 
@@ -219,8 +190,10 @@ def test_docs_tool_with_document_id_returns_correct_document(client) -> None:
     )
 
     assert response.status_code == 200
-    out = response.json()
-    assert "body" and "title" and "document_id" in out["result"]["structuredContent"]["results"]
-    assert isinstance(out["result"]["structuredContent"]["total_matches"], int)
-    assert isinstance(out["result"]["structuredContent"]["returned_count"], int)
+    json_out = response.json()["result"]["structuredContent"]
+    assert "body" in json_out["results"]
+    assert "title" in json_out["results"]
+    assert "document_id" in json_out["results"]
+    assert isinstance(json_out["total_matches"], int)
+    assert isinstance(json_out["returned_count"], int)
    

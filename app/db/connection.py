@@ -8,6 +8,8 @@ def get_db_connection() -> psycopg.Connection:
         port=settings.db_port,
         dbname=settings.db_name,
         user=settings.db_user,
-        password=settings.db_password
+        password=settings.db_password,
+        connect_timeout=3
     )
     return conn
+

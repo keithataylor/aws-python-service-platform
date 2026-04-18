@@ -86,10 +86,10 @@ def test_evaluate_agent_action_endpoint_returns_deny_for_non_matching_constraint
             "agent_id": "agent-123",
             "server_name": "server-123",
             "tool_name": "docs_tool",
-            "action": "tool.read",
-            "resource": "public.docs",
-            "parameters": {"document_visibility": "unknown"},
-            "context": {},
+            "action": "document.read",
+            "resource": "document",
+            "parameters": {"document_id": "doc3"},
+            "context": {"document_visibility": "unknown"},
         }
     )
     assert response.status_code == 200
@@ -110,10 +110,13 @@ def test_evaluate_agent_action_endpoint_returns_allow_for_matching_constraint(
             "agent_id": "agent-123",
             "server_name": "docs_mcp",
             "tool_name": "docs_tool",
-            "action": "tool.read",
-            "resource": "public.docs",
-            "parameters": {"document_visibility": "public"},
-            "context": {"user_role": "reader"},
+            "action": "document.read",
+            "resource": "document",
+            "parameters": {"document_id": "doc3"},
+            "context": {
+                "document_visibility": "public",
+                "user_role": "reader"
+            },
         }
     )
     assert response.status_code == 200

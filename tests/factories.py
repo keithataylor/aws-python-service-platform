@@ -13,11 +13,11 @@ def build_test_policy() -> PolicyDocument:
                 when=PolicyWhen(
                     tool_name="docs_tool",
                     server_name="docs_mcp",
-                    action="tool.read",
-                    resource="public.docs",
+                    action="document.read",
+                    resource="document",
                     constraints=[
                         PolicyConstraint(
-                            source="parameters",
+                            source="context",
                             field="document_visibility",
                             operator="equals",
                             value="public",

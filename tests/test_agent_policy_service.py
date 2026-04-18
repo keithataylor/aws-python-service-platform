@@ -14,10 +14,13 @@ def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -
             agent_id="agent-123",
             server_name="docs_mcp",
             tool_name="docs_tool",
-            action="tool.read",
-            resource="public.docs",
-            parameters={"document_visibility": "public"},
-            context={"user_role": "reader"},
+            action="document.read",
+            resource="document",
+            parameters={"document_id": "doc3"},
+            context={
+                "document_visibility": "public",
+                "user_role": "reader"
+            },
         ),
         build_test_policy()
     )
@@ -33,10 +36,12 @@ def test_evaluate_agent_action_service_returns_deny_for_non_matching_constraint(
             agent_id="agent-123",
             server_name="docs_mcp",
             tool_name="docs_tool",
-            action="tool.read",
-            resource="public.docs",
-            parameters={"document_visibility": "unknown"},
-            context={"user_role": "reader"},
+            action="document.read",
+            resource="document",
+            parameters={"document_id": "doc3"},
+            context={
+                "document_visibility": "unknown",
+                "user_role": "reader"},
         ),
         build_test_policy()
     )
@@ -51,10 +56,13 @@ def test_evaluate_server_name_participates_in_policy_evaluation() -> None:
             agent_id="agent-123",
             server_name="bad_server_name",
             tool_name="docs_tool",
-            action="tool.read",
-            resource="public.docs",
-            parameters={"document_visibility": "public"},
-            context={"user_role": "reader"},
+            action="document.read",
+            resource="document",
+            parameters={"document_id": "doc3"},
+            context={
+                "document_visibility": "public",
+                "user_role": "reader"
+            },
         ),
         build_test_policy()
     )
@@ -70,10 +78,13 @@ def test_evaluate_returns_first_matching_policy() -> None:
             agent_id="agent-123",
             server_name="docs_mcp",
             tool_name="docs_tool",
-            action="tool.read",
-            resource="public.docs",
-            parameters={"document_visibility": "public"},
-            context={"user_role": "reader"},
+            action="document.read",
+            resource="document",
+            parameters={"document_id": "doc3"},
+            context={
+                "document_visibility": "public",
+                "user_role": "reader"
+            },
         ),
         PolicyDocument(
             version="1.0",
@@ -85,11 +96,11 @@ def test_evaluate_returns_first_matching_policy() -> None:
                     when=PolicyWhen(
                         tool_name="docs_tool",
                         server_name="docs_mcp",
-                        action="tool.read",
-                        resource="public.docs",
+                        action="document.read",
+                        resource="document",
                         constraints=[
                             PolicyConstraint(
-                                source="parameters",
+                                source="context",
                                 field="document_visibility",
                                 operator="equals",
                                 value="public",
@@ -109,11 +120,11 @@ def test_evaluate_returns_first_matching_policy() -> None:
                     when=PolicyWhen(
                         tool_name="docs_tool",
                         server_name="docs_mcp",
-                        action="tool.read",
-                        resource="public.docs",
+                        action="document.read",
+                        resource="document",
                         constraints=[
                             PolicyConstraint(
-                                source="parameters",
+                                source="context",
                                 field="document_visibility",
                                 operator="equals",
                                 value="public",
@@ -140,8 +151,8 @@ def test_evaluate_invokes_context_parameters() -> None:
         agent_id="agent-123",
         server_name="docs_mcp",
         tool_name="docs_tool",
-        action="tool.read",
-        resource="public.docs",
+        action="document.read",
+        resource="document",
         parameters={},
         context={"user_role": "reader"},
     )
@@ -154,8 +165,8 @@ def test_evaluate_invokes_context_parameters() -> None:
                     when=PolicyWhen(
                         tool_name="docs_tool",
                         server_name="docs_mcp",
-                        action="tool.read",
-                        resource="public.docs",
+                        action="document.read",
+                        resource="document",
                         constraints=[
                             PolicyConstraint(
                                 source="context",
@@ -189,8 +200,8 @@ def test_evaluate_invokes_context_parameters() -> None:
         agent_id="agent-123",
         server_name="docs_mcp",
         tool_name="docs_tool",
-        action="tool.read",
-        resource="public.docs",
+        action="document.read",
+        resource="document",
         parameters={},
         context={"user_role": "writer"},
     )

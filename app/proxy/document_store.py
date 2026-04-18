@@ -46,11 +46,18 @@ def search_documents(query: str) -> list[dict[str, Any]]:
         with conn.cursor() as cursor:
             if not query:
                 results = cursor.execute(
-                    "SELECT document_id, title, summary FROM documents WHERE document_visibility = 'public'"
+                    """
+                    SELECT document_id, title, summary FROM documents 
+                        WHERE document_visibility = 'public'
+                    """
                 ).fetchall()
             else:
                 results = cursor.execute(
-                    "SELECT document_id, title, summary FROM documents WHERE document_visibility = 'public' AND (title ILIKE %s OR summary ILIKE %s)",
+                    """
+                    SELECT document_id, title, summary FROM documents 
+                        WHERE document_visibility = 'public' 
+                        AND (title ILIKE %s OR summary ILIKE %s)
+                    """,
                     (f"%{query}%", f"%{query}%")
                 ).fetchall()
             
