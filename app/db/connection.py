@@ -13,3 +13,12 @@ def get_db_connection() -> psycopg.Connection:
     )
     return conn
 
+
+def check_database_health() -> bool:
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1")
+        return True
+    except Exception:
+        return False

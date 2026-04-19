@@ -1,5 +1,6 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from app.db.connection import check_database_health
 from app.policy.models import PolicyDocument
 from app.schemas.system import HealthResponse, ServiceInfoResponse
 from app.schemas.echo import EchoRequest, EchoResponse
@@ -20,6 +21,9 @@ api_v1_router = APIRouter(prefix="/api/v1")
 @router.get("/health", response_model=HealthResponse, status_code=200)
 async def health_check() -> HealthResponse:
     """ Return service health status. """
+    # Check database connectivity.
+    if not check_database_health():
+        raise HTTPException(status_code=503, detail="database connection failed")
     return HealthResponse(status="ok")
 
 

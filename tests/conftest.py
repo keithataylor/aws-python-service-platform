@@ -3,7 +3,7 @@ import pytest
 
 from app.api.deps import get_agent_policy
 from app.policy.models import PolicyDocument
-from app.main import app, mcp_app
+from app.main import app
 
 from tests.factories import build_test_policy
 

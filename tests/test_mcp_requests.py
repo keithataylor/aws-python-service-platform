@@ -22,7 +22,7 @@ test_json = init_request["json"]
 test_headers = init_request["headers"]
     
 
-def test_normalize_tool_invocation():
+def test_normalize_tool_invocation() -> None:
 
     invocation_request = normalize_tool_invocation(
         agent_id="agent_123",
@@ -44,7 +44,7 @@ def test_normalize_tool_invocation():
     assert invocation_request.context == {"key": "value"}
     
 
-def test_mcp_initialization(client):
+def test_mcp_initialization(client) -> None:
    
     response = client.post(test_url, json=test_json, headers=test_headers)
 
@@ -54,7 +54,7 @@ def test_mcp_initialization(client):
     assert '"result":{"protocolVersion":"2025-06-18"' in response.text
 
 
-def test_mcp_returns_tools_list(client):
+def test_mcp_returns_tools_list(client) -> None:
 
     init_response = client.post(test_url, json=test_json, headers=test_headers)
 
