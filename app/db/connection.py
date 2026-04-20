@@ -1,15 +1,18 @@
 import psycopg
-from app.core.config import settings
+
+from app.core.config import get_settings
+
 
 def get_db_connection() -> psycopg.Connection:
-    
+    settings = get_settings()
+
     conn = psycopg.connect(
         host=settings.db_host,
         port=settings.db_port,
         dbname=settings.db_name,
         user=settings.db_user,
         password=settings.db_password,
-        connect_timeout=3
+        connect_timeout=3,
     )
     return conn
 

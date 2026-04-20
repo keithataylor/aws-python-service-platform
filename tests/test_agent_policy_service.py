@@ -6,6 +6,11 @@ from app.schemas.invocation import InvocationDecisionRequest
 from app.policy.evaluator import pdp_evaluate_agent_action
 from tests.factories import build_test_policy
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -> None:
     
     response = pdp_evaluate_agent_action(

@@ -1,0 +1,1 @@
+Get-Content migrations/001_create_documents_table.sql | docker compose exec -T postgres psql -U app_user -d test_db

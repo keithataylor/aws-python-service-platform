@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.integration
 
 def test_health_endpoint_returns_ok(client) -> None:
     response = client.get("/health")
@@ -125,4 +128,11 @@ def test_evaluate_agent_action_endpoint_returns_allow_for_matching_constraint(
         "rationale": ["POLICY_ALLOW_PUBLIC_DOCS_READ"],
         "obligations": [],
     }
+
+
+def test_health_check_returns_503_when_database_unavailable(client, monkeypatch) -> None:
+    monkeypatch.setattr("app.api.routes.check_database_health", lambda: False)
+    response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json() == {"detail": "database connection failed"}
 

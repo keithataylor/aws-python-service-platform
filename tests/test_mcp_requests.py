@@ -1,6 +1,9 @@
 from app.proxy.normalizer import normalize_tool_invocation
 from app.schemas.invocation import InvocationDecisionRequest
 
+import pytest
+
+pytestmark = pytest.mark.integration
 
 init_request = {
     "url":"/mcp",
@@ -179,7 +182,7 @@ def test_docs_tool_with_document_id_returns_correct_document(client) -> None:
             "method": "tools/call",
             "params": {
                 "name": "docs_tool", 
-                "arguments": {"document_id": "doc3"}
+                "arguments": {"document_id": "test_doc_public_1"}
             }
         },
         headers={
