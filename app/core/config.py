@@ -17,9 +17,9 @@ class Settings(BaseSettings):
     db_host: str = Field(validation_alias="DB_HOST")
     db_port: int = Field(validation_alias="DB_PORT")
     db_name: str = Field(validation_alias="DB_NAME")
-    test_db_name: str = Field(validation_alias="TEST_DB_NAME")
     db_user: str = Field(validation_alias="DB_USER")
     db_password: str = Field(validation_alias="DB_PASSWORD")
+    test_db_name: str = Field(validation_alias="TEST_DB_NAME")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -31,5 +31,3 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     return Settings()
 
-
-settings = get_settings()

@@ -36,21 +36,18 @@ def client(use_test_db, seed_test_documents):
 
 
 @pytest.fixture
-def use_test_db(monkeypatch) -> Iterator[None]:
-    settings = get_settings()
-    monkeypatch.setenv("DB_NAME", settings.test_db_name)
-    get_settings.cache_clear()
-    try:
-        yield
-    finally:
-        get_settings.cache_clear()
+def use_test_db(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.db.connection.get_active_db_name",
+        lambda: get_settings().test_db_name,
+    )
 
 
 @pytest.fixture
 def seed_test_documents(use_test_db) -> None:
-    with get_db_connection() as conn:
+    with get_db_connection(db_name=get_settings().test_db_name) as conn:
         with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM documents;")
+            cursor.execute("TRUNCATE TABLE documents RESTART IDENTITY;")
             cursor.execute(
                 """
                 INSERT INTO documents (

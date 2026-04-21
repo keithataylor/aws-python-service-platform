@@ -1,0 +1,88 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: app_db
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: app_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app_user -d app_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_NAME: app_db
+      TEST_DB_NAME: test_db
+      DB_USER: app_user
+      DB_PASSWORD: app_password
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h 127.0.0.1 -p 5432 -U app_user -d app_db; do
+            sleep 1
+          done
+        env:
+          PGPASSWORD: app_password
+
+      - name: Create test database if missing
+        run: |
+          EXISTS=$(psql -h 127.0.0.1 -p 5432 -U app_user -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'test_db';")
+          if [ "$EXISTS" != "1" ]; then
+            psql -h 127.0.0.1 -p 5432 -U app_user -d postgres -c "CREATE DATABASE test_db;"
+          fi
+        env:
+          PGPASSWORD: app_password
+
+      - name: Apply app_db schema
+        run: |
+          psql -h 127.0.0.1 -p 5432 -U app_user -d app_db -f migrations/001_create_documents_table.sql
+        env:
+          PGPASSWORD: app_password
+
+      - name: Apply test_db schema
+        run: |
+          psql -h 127.0.0.1 -p 5432 -U app_user -d test_db -f migrations/001_create_documents_table.sql
+        env:
+          PGPASSWORD: app_password
+
+      - name: Run unit tests
+        run: |
+          python -m pytest -m unit
+
+      - name: Run integration tests
+        run: |
+          python -m pytest -m integration
