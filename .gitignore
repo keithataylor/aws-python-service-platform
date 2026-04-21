@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .env
+.vscode/
 # Ignore test files
 .pytest_cache/
 .coverage
