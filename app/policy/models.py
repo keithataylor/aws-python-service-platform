@@ -57,3 +57,10 @@ class PolicyDocument(BaseModel):
     default_decision: PolicyDecision
     rules: list[PolicyRule] = Field(default_factory=list)
 
+
+class LoadedPolicy(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    document: PolicyDocument
+    policy_sha256: str
+    
+

@@ -1,13 +1,18 @@
+from datetime import datetime, timezone
 from typing import Any
+from app.audit.pdp_audit_service import record_pdp_audit_event
+from app.core.logging import app_log_event
+from app.policy.models import LoadedPolicy
 from app.proxy.config import MCP_SERVER_NAME
 from app.proxy.tool_registry import get_tool_spec
 from app.proxy.normalizer import normalize_tool_invocation
 from app.policy.evaluator import pdp_evaluate_agent_action
+from app.schemas.pdp_audit import PDPAuditEvent
 
 
 def proxy_process_tool_invocation(
         agent_id: str, tool_name: str, 
-        tool_arguments: dict, policy: dict
+        tool_arguments: dict, loaded_policy: LoadedPolicy
         ) -> dict[str, Any]:
     """
     Process and route incoming MCP tool calls to the appropriate handlers based on the tool name and arguments.
@@ -15,8 +20,7 @@ def proxy_process_tool_invocation(
         agent_id (str): The ID of the agent making the request.
         tool_name (str): The name of the tool being called.
         tool_arguments (dict): A dictionary of arguments passed to the tool.
-        context (dict): Additional context about the request, such as agent ID, server name, etc.
-        policy (dict): The policy to be applied for evaluating the action.
+        loaded_policy (LoadedPolicy): The loaded policy to be applied for evaluating the action.
     Returns:
         dict[str, Any]: A dictionary containing the tool name, arguments, metadata, and status of the processed call.
     """ 
@@ -35,11 +39,34 @@ def proxy_process_tool_invocation(
         context=derived_context
     )
 
-    evaluation = pdp_evaluate_agent_action(normalize_request, policy)
+    evaluation = pdp_evaluate_agent_action(normalize_request, loaded_policy.document)
+
+    record_pdp_audit_event(
+        event=PDPAuditEvent(
+            request_id=normalize_request.request_id,
+            agent_id=normalize_request.agent_id,
+            server_name=normalize_request.server_name,
+            tool_name=normalize_request.tool_name,
+            invocation_action=normalize_request.action,
+            resource=[normalize_request.resource],
+            decision=evaluation.decision,
+            rationale=evaluation.rationale,
+            policy_version=loaded_policy.document.version,
+            policy_sha256=loaded_policy.policy_sha256,
+            created_at=datetime.now(timezone.utc)
+        )
+    )
+    
 
     if evaluation.decision == "deny":
+        app_log_event(
+            event_name="tool_invocation_blocked",
+            request_id=normalize_request.request_id,
+            tool_name=tool_name,
+            decision=evaluation.decision,
+        )
         return {
-            "tool_name": tool_name,
+            "tool_name": normalize_request.tool_name,
             "arguments": tool_arguments,
             "meta": spec, 
             "status": "denied",
@@ -52,5 +79,22 @@ def proxy_process_tool_invocation(
     if post_allow is None:
         raise ValueError(f"Tool spec for '{tool_name}' is missing post_allow")
     
-    return post_allow(tool_arguments)
+
+    try:
+        result = post_allow(tool_arguments)
+    except Exception:
+        app_log_event(
+            event_name="tool_invocation_failed",
+            request_id=normalize_request.request_id,
+            tool_name=tool_name,
+        )
+        raise
+    
+    app_log_event(
+        event_name="tool_invocation_executed",
+        request_id=normalize_request.request_id,
+        tool_name=tool_name
+    )
+        
+    return result
 

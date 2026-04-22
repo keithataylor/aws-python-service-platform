@@ -1,4 +1,11 @@
+from typing import Any
+from urllib import response
+
+from app.db.connection import get_db_connection
+
 from app.proxy.normalizer import normalize_tool_invocation
+from app.proxy.tool_registry import get_tool_spec
+
 from app.schemas.invocation import InvocationDecisionRequest
 
 import pytest
@@ -200,3 +207,151 @@ def test_docs_tool_with_document_id_returns_correct_document(client) -> None:
     assert isinstance(json_out["total_matches"], int)
     assert isinstance(json_out["returned_count"], int)
    
+
+
+def test_mcp_tool_call_and_audit_record(client) -> None:
+    init_response = client.post(test_url, json=test_json, headers=test_headers)
+
+    session_id = init_response.headers.get("Mcp-Session-Id")
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE pdp_audit RESTART IDENTITY;")
+
+    response = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {
+                "name": "docs_tool", 
+                "arguments": {"document_id": "test_doc_public_1"}
+            }
+        },
+        headers={
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json",
+            "Mcp-Session-Id": session_id
+        },
+    )
+
+    assert response.status_code == 200
+  
+    # Now query the test_db for the audit record
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT tool_name, decision, policy_version, policy_sha256
+                FROM pdp_audit
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            )
+            audit_record = cursor.fetchone()
+
+    tool_name, decision, policy_version, policy_sha256 = audit_record
+
+    assert audit_record is not None
+    assert tool_name == "docs_tool"
+    assert decision == "allow"
+    assert policy_version == "1.0"
+    assert policy_sha256 is not None and len(policy_sha256) == 64  # Assuming it's a SHA-256 hash
+   
+    
+
+def test_mcp_tool_call_with_decision_denied(client, override_loaded_policy) -> None:
+    
+    init_response = client.post(test_url, json=test_json, headers=test_headers)
+
+    session_id = init_response.headers.get("Mcp-Session-Id")
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE pdp_audit RESTART IDENTITY;")
+
+    response = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "tools/call",
+            "params": {
+                "name": "docs_tool", 
+                "arguments": {"document_id": "test_doc_private_1"}
+            }
+        },
+        headers={
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json",
+            "Mcp-Session-Id": session_id
+        },
+    )
+
+    assert response.status_code == 200
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT tool_name, decision, policy_version, policy_sha256
+                FROM pdp_audit
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            )
+            audit_record = cursor.fetchone()
+
+    tool_name, decision, policy_version, policy_sha256 = audit_record
+
+    assert audit_record is not None
+    assert tool_name == "docs_tool"
+    assert decision == "deny"
+    assert policy_version == "1.0"
+    assert policy_sha256 is not None and len(policy_sha256) == 64  # Assuming it's a SHA-256 hash
+
+
+#overrides the tool spec or post_allow function to raise an exception
+# performs the MCP request
+# asserts the returned error shape is correct
+def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
+
+    init_response = client.post(test_url, json=test_json, headers=test_headers)
+
+    session_id = init_response.headers.get("Mcp-Session-Id")
+
+    original_spec = get_tool_spec("docs_tool")
+    original_post_allow = original_spec["post_allow"]
+
+    def post_allow_exception(arguments: dict[str, Any]) -> dict[str, Any]:
+        raise Exception("Simulated post_allow failure")
+
+    original_spec["post_allow"] = post_allow_exception
+
+
+    response = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 99,
+            "method": "tools/call",
+            "params": {
+                "name": "docs_tool",
+                "arguments": {"document_id": "test_doc_public_1"},
+            },
+        },
+        headers={
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json",
+            "Mcp-Session-Id": session_id, 
+        },
+    )
+
+    original_spec["post_allow"] = original_post_allow
+   
+    assert response.status_code == 200
+    json_out = response.json()
+    assert json_out["result"]["isError"] is True
+    assert "Simulated post_allow failure" in json_out["result"]["content"][0]["text"]
+    

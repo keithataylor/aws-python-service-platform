@@ -31,19 +31,15 @@ def _rule_matches(
     payload: InvocationDecisionRequest,
 ) -> bool:
     if rule.when.tool_name != payload.tool_name:     
-        #print(f"Tool name does not match: expected={rule.when.tool_name}, actual={payload.tool_name}, payload={payload}")
         return False
 
     if rule.when.server_name != payload.server_name:
-        #print(f"Server name does not match: expected={rule.when.server_name}, actual={payload.server_name}, payload={payload}")
         return False
     
     if rule.when.action != payload.action:
-        #print(f"Action does not match: expected={rule.when.action}, actual={payload.action}")
         return False
 
     if rule.when.resource != payload.resource:
-        #print(f"Resource does not match: expected={rule.when.resource}, actual={payload.resource}")
         return False
 
     return all(

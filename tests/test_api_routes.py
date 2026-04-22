@@ -62,7 +62,7 @@ def test_evaluate_agent_action_endpoint_returns_default_deny(client) -> None:
     }
 
 def test_evaluate_agent_action_rejects_missing_agent_id(
-        client, override_agent_policy
+        client, override_loaded_policy
 ) -> None:
     response = client.post(
         "/api/v1/agent-actions/evaluate",
@@ -80,7 +80,7 @@ def test_evaluate_agent_action_rejects_missing_agent_id(
 
 
 def test_evaluate_agent_action_endpoint_returns_deny_for_non_matching_constraint(
-        client, override_agent_policy
+        client, override_loaded_policy
 ) -> None:
     response = client.post(
         "/api/v1/agent-actions/evaluate",
@@ -104,7 +104,7 @@ def test_evaluate_agent_action_endpoint_returns_deny_for_non_matching_constraint
 
 
 def test_evaluate_agent_action_endpoint_returns_allow_for_matching_constraint(
-        client, override_agent_policy
+        client, override_loaded_policy
 ) -> None:
     response = client.post(
         "/api/v1/agent-actions/evaluate",
