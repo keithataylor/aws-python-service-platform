@@ -71,7 +71,6 @@ jobs:
         run: |
           psql -h 127.0.0.1 -p 5432 -U app_user -d app_db -f migrations/001_create_documents_table.sql
           psql -h 127.0.0.1 -p 5432 -U app_user -d app_db -f migrations/003_create_pdp_audit_table.sql
-          psql -h 127.0.0.1 -p 5432 -U app_user -d app_db -f migrations/004_add_policy_sha256_to_pdp_audit.sql
         env:
           PGPASSWORD: app_password
 
@@ -79,7 +78,6 @@ jobs:
         run: |
           psql -h 127.0.0.1 -p 5432 -U app_user -d test_db -f migrations/001_create_documents_table.sql
           psql -h 127.0.0.1 -p 5432 -U app_user -d test_db -f migrations/003_create_pdp_audit_table.sql
-          psql -h 127.0.0.1 -p 5432 -U app_user -d test_db -f migrations/004_add_policy_sha256_to_pdp_audit.sql
         env:
           PGPASSWORD: app_password
 
