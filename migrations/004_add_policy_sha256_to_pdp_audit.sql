@@ -1,2 +1,0 @@
-ALTER TABLE pdp_audit
-ADD COLUMN IF NOT EXISTS policy_sha256 TEXT;
