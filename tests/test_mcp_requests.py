@@ -1,5 +1,4 @@
 from typing import Any
-from urllib import response
 
 from app.db.connection import get_db_connection
 
