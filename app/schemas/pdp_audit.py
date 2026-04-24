@@ -9,7 +9,7 @@ class PDPAuditEvent(BaseModel):
     server_name: str
     tool_name: str
     invocation_action: str
-    resource: list[str]
+    resource: str
     decision: str
     rationale: list[str]
     policy_version: str

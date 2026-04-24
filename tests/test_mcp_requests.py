@@ -3,11 +3,13 @@ from typing import Any
 from app.db.connection import get_db_connection
 
 from app.proxy.normalizer import normalize_tool_invocation
-from app.proxy.tool_registry import get_tool_spec
+from app.proxy.tool_registry import TOOL_SPECS, get_tool_spec
 
 from app.schemas.invocation import InvocationDecisionRequest
 
 import pytest
+
+from dataclasses import replace
 
 pytestmark = pytest.mark.integration
 
@@ -320,34 +322,34 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
 
     session_id = init_response.headers.get("Mcp-Session-Id")
 
-    original_spec = get_tool_spec("docs_tool")
-    original_post_allow = original_spec["post_allow"]
-
+    original_spec = TOOL_SPECS["docs_tool"]
+   
     def post_allow_exception(arguments: dict[str, Any]) -> dict[str, Any]:
         raise Exception("Simulated post_allow failure")
 
-    original_spec["post_allow"] = post_allow_exception
+    try:
+        TOOL_SPECS["docs_tool"] = replace(original_spec, post_allow=post_allow_exception,)
 
-
-    response = client.post(
-        "/mcp",
-        json={
-            "jsonrpc": "2.0",
-            "id": 99,
-            "method": "tools/call",
-            "params": {
-                "name": "docs_tool",
-                "arguments": {"document_id": "test_doc_public_1"},
+        response = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 99,
+                "method": "tools/call",
+                "params": {
+                    "name": "docs_tool",
+                    "arguments": {"document_id": "test_doc_public_1"},
+                },
             },
-        },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id, 
-        },
-    )
-
-    original_spec["post_allow"] = original_post_allow
+            headers={
+                "Accept": "application/json, text/event-stream",
+                "Content-Type": "application/json",
+                "Mcp-Session-Id": session_id, 
+            },
+        )
+    finally:
+        TOOL_SPECS["docs_tool"] = original_spec
+        
    
     assert response.status_code == 200
     json_out = response.json()

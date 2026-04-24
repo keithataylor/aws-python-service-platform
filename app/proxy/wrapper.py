@@ -26,16 +26,16 @@ def proxy_process_tool_invocation(
     """ 
 
     spec = get_tool_spec(tool_name)
-    pre_pdp = spec.get("pre_pdp")
-    derived_context = pre_pdp(tool_arguments) if pre_pdp else {}   
+    
+    derived_context = spec.pre_pdp(tool_arguments) if spec.pre_pdp else {}   
 
     normalize_request = normalize_tool_invocation(
         agent_id=agent_id,
         server_name=MCP_SERVER_NAME,
-        tool_name=tool_name,
-        action=spec["action"],
+        tool_name=spec.tool_name,
+        action=spec.invocation_action,
         arguments=tool_arguments,
-        resource=spec["resource"], 
+        resource=spec.resource, 
         context=derived_context
     )
 
@@ -48,7 +48,7 @@ def proxy_process_tool_invocation(
             server_name=normalize_request.server_name,
             tool_name=normalize_request.tool_name,
             invocation_action=normalize_request.action,
-            resource=[normalize_request.resource],
+            resource=normalize_request.resource,
             decision=evaluation.decision,
             rationale=evaluation.rationale,
             policy_version=loaded_policy.document.version,
@@ -62,7 +62,7 @@ def proxy_process_tool_invocation(
         app_log_event(
             event_name="tool_invocation_blocked",
             request_id=normalize_request.request_id,
-            tool_name=tool_name,
+            tool_name=normalize_request.tool_name,
             decision=evaluation.decision,
         )
         return {
@@ -74,26 +74,24 @@ def proxy_process_tool_invocation(
             "rationale": evaluation.rationale
         }
 
-    post_allow = spec.get("post_allow")
-
-    if post_allow is None:
+    if spec.post_allow is None:
         raise ValueError(f"Tool spec for '{tool_name}' is missing post_allow")
     
 
     try:
-        result = post_allow(tool_arguments)
+        result = spec.post_allow(tool_arguments)
     except Exception:
         app_log_event(
             event_name="tool_invocation_failed",
             request_id=normalize_request.request_id,
-            tool_name=tool_name,
+            tool_name=normalize_request.tool_name,
         )
         raise
     
     app_log_event(
         event_name="tool_invocation_executed",
         request_id=normalize_request.request_id,
-        tool_name=tool_name
+        tool_name=normalize_request.tool_name
     )
         
     return result
