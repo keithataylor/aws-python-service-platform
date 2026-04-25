@@ -3,10 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.db.connection import check_database_health
 from app.policy.models import PolicyDocument
 from app.schemas.system import HealthResponse, ServiceInfoResponse
-from app.schemas.echo import EchoRequest, EchoResponse
-from app.schemas.task import TaskSubmitRequest, TaskSubmitResponse, TaskStatusResponse
 from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
-from app.services.task_service import get_task_status, submit_task
 from app.policy.evaluator import pdp_evaluate_agent_action
 from app.api.deps import get_agent_policy
 
@@ -31,24 +28,6 @@ async def health_check() -> HealthResponse:
 async def service_info() -> ServiceInfoResponse:  
     """ Return basic service metadata. """
     return ServiceInfoResponse(service=SERVICE_NAME, version=APP_VERSION)
-
-
-@api_v1_router.post("/echo", response_model=EchoResponse, status_code=200)
-async def echo(payload: EchoRequest) -> EchoResponse:
-    """Return the submitted text."""
-    return EchoResponse(text=payload.text)
-
-
-@api_v1_router.post("/tasks", response_model=TaskSubmitResponse, status_code=202)
-async def submit_task_endpoint(payload: TaskSubmitRequest) -> TaskSubmitResponse:
-    """Accept a task submission."""
-    return submit_task(payload.name)
-
-
-@api_v1_router.get("/tasks/{task_id}", response_model=TaskStatusResponse, status_code=200)
-async def get_task_status_endpoint(task_id: str) -> TaskStatusResponse:
-    """Return task status."""
-    return get_task_status(task_id)
 
 
 @api_v1_router.post(

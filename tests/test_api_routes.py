@@ -15,31 +15,6 @@ def test_service_info_returns_service_metadata(client) -> None:
     assert response.json() == {'service': 'AWS Python Service Platform', 'version': '0.1.0'}
 
 
-def test_echo_endpoint_returns_submitted_text(client) -> None:
-    response = client.post("/api/v1/echo", json={"text": "hello"})
-    assert response.status_code == 200
-    assert response.json() == {"text": "hello"}
-
-
-def test_echo_rejects_missing_text(client) -> None:
-    response = client.post("/api/v1/echo", json={})
-    assert response.status_code == 422  
-
-
-def test_submit_task_accepts_request(client) -> None:
-    response = client.post("/api/v1/tasks", json={"name": "demo-task"})
-    assert response.status_code == 202
-    data = response.json()
-    assert data["status"] == "submitted"
-    assert isinstance(data["task_id"], str)
-    assert data["task_id"] != ""
-
-
-def test_submit_task_reject_empty_name(client) -> None:
-    response = client.post("/api/v1/tasks", json={"name": ""})
-    assert response.status_code == 422
-
-
 def test_evaluate_agent_action_endpoint_returns_default_deny(client) -> None:
     response = client.post(
         "/api/v1/agent-actions/evaluate",
