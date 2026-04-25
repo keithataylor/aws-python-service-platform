@@ -329,7 +329,7 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
 
     try:
         TOOL_SPECS["docs_tool"] = replace(original_spec, post_allow=post_allow_exception,)
-
+        
         response = client.post(
             "/mcp",
             json={

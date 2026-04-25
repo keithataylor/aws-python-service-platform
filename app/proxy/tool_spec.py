@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 PrePDPHandler = Callable[[dict[str, Any]], dict[str, Any]]
-#PostAllowHandler = Callable[[dict[str, Any]], dict[str, Any]]
-PostAllowHandler = Callable[ [dict[str, Any]], dict[str, Any]]
+PostAllowHandler = Callable[[dict[str, Any]], dict[str, Any]]
 
 
 @dataclass(frozen=True)
