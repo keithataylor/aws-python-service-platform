@@ -1,16 +1,15 @@
 
 from fastapi import FastAPI
+from fastapi.concurrency import asynccontextmanager
 from fastmcp import FastMCP
 from fastmcp.dependencies import CurrentContext
-from fastmcp.server.dependencies import CurrentRequest
 from fastmcp.server.context import Context
+from fastmcp.server.dependencies import CurrentRequest
 from fastmcp.utilities.lifespan import combine_lifespans
-
 from starlette.requests import Request
-from fastapi.concurrency import asynccontextmanager
 
 from app.api.deps import get_loaded_policy
-from app.api.routes import router, api_v1_router
+from app.api.routes import api_v1_router, router
 from app.core.config import SERVICE_NAME
 from app.policy.loader import load_agent_policy
 from app.proxy.wrapper import proxy_process_tool_invocation
@@ -63,7 +62,10 @@ async def docs_tool(document_id: str,
                     ctx: Context = CurrentContext(), 
                     request: Request = CurrentRequest()
 ) -> dict:
-    """Example tool implementation that normalizes the incoming MCP request and simulates a response."""
+    """
+    Example tool implementation that normalizes 
+    the incoming MCP request and simulates a response.
+    """
    
     proxy_response = proxy_process_tool_invocation(
         agent_id=resolve_agent_id(ctx),

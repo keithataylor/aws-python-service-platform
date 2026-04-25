@@ -81,6 +81,10 @@ jobs:
         env:
           PGPASSWORD: app_password
 
+      - name: Run Ruff lint
+        run: |
+          python -m ruff check .
+
       - name: Run unit tests
         run: |
           python -m pytest -m unit

@@ -1,7 +1,12 @@
 from app.policy.models import (
-    PolicyDocument, PolicyRule, PolicyConstraint, 
-    PolicyRuleMeta, PolicyThen, PolicyWhen
+    PolicyConstraint,
+    PolicyDocument,
+    PolicyRule,
+    PolicyRuleMeta,
+    PolicyThen,
+    PolicyWhen,
 )
+
 
 def build_test_policy() -> PolicyDocument:
     return PolicyDocument(

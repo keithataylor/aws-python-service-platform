@@ -1,6 +1,7 @@
 """Shared API dependencies."""
 
 from starlette.requests import Request
+
 from app.policy.models import LoadedPolicy, PolicyDocument
 
 

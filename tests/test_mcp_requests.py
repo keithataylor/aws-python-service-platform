@@ -1,15 +1,12 @@
+from dataclasses import replace
 from typing import Any
-
-from app.db.connection import get_db_connection
-
-from app.proxy.normalizer import normalize_tool_invocation
-from app.proxy.tool_registry import TOOL_SPECS, get_tool_spec
-
-from app.schemas.invocation import InvocationDecisionRequest
 
 import pytest
 
-from dataclasses import replace
+from app.db.connection import get_db_connection
+from app.proxy.normalizer import normalize_tool_invocation
+from app.proxy.tool_registry import TOOL_SPECS
+from app.schemas.invocation import InvocationDecisionRequest
 
 pytestmark = pytest.mark.integration
 

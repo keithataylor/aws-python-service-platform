@@ -1,7 +1,6 @@
-import logging
 import json
+import logging
 import sys
-
 
 app_logger = logging.getLogger("app")
 app_logger.setLevel(logging.INFO)

@@ -1,8 +1,8 @@
 import json
 import logging
 
-from app.schemas.pdp_audit import PDPAuditEvent
 from app.audit.pdp_audit_repository import insert_pdp_audit_event
+from app.schemas.pdp_audit import PDPAuditEvent
 
 audit_logger = logging.getLogger("pdp_audit")
 audit_logger.setLevel(logging.INFO)

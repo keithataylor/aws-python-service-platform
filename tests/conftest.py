@@ -1,13 +1,12 @@
 from collections.abc import Iterator
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
-from app.policy.models import LoadedPolicy, PolicyDocument
-from app.main import app
 from app.core.config import get_settings
 from app.db.connection import get_db_connection
-
+from app.main import app
+from app.policy.models import LoadedPolicy, PolicyDocument
 from tests.factories import build_test_policy
 
 
@@ -60,8 +59,10 @@ def seed_test_documents(use_test_db) -> None:
                     body,
                     document_visibility
                 ) VALUES
-                    ('test_doc_public_1', 'Test Document 1', 'Public test summary', 'Public test body', 'public'),
-                    ('test_doc_private_1', 'Test Document 2', 'Private test summary', 'Private test body', 'private')
+                    ('test_doc_public_1', 'Test Document 1', 
+                    'Public test summary', 'Public test body', 'public'),
+                    ('test_doc_private_1', 'Test Document 2', 
+                    'Private test summary', 'Private test body', 'private')
                 """
             )
 

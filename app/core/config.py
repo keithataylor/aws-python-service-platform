@@ -5,7 +5,6 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 SERVICE_NAME = "AWS Python Service Platform"
 APP_VERSION = "0.1.0"
 

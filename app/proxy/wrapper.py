@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 from typing import Any
+
 from app.audit.pdp_audit_service import record_pdp_audit_event
 from app.core.logging import app_log_event
+from app.policy.evaluator import pdp_evaluate_agent_action
 from app.policy.models import LoadedPolicy
 from app.proxy.config import MCP_SERVER_NAME
-from app.proxy.tool_registry import get_tool_spec
 from app.proxy.normalizer import normalize_tool_invocation
-from app.policy.evaluator import pdp_evaluate_agent_action
+from app.proxy.tool_registry import get_tool_spec
 from app.schemas.pdp_audit import PDPAuditEvent
 
 
@@ -15,14 +16,16 @@ def proxy_process_tool_invocation(
         tool_arguments: dict, loaded_policy: LoadedPolicy
         ) -> dict[str, Any]:
     """
-    Process and route incoming MCP tool calls to the appropriate handlers based on the tool name and arguments.
+    Process and route incoming MCP tool calls to the appropriate handlers 
+    based on the tool name and arguments.
     Args:
         agent_id (str): The ID of the agent making the request.
         tool_name (str): The name of the tool being called.
         tool_arguments (dict): A dictionary of arguments passed to the tool.
         loaded_policy (LoadedPolicy): The loaded policy to be applied for evaluating the action.
     Returns:
-        dict[str, Any]: A dictionary containing the tool name, arguments, metadata, and status of the processed call.
+        dict[str, Any]: A dictionary containing the tool name, arguments, 
+        metadata, and status of the processed call.
     """ 
 
     spec = get_tool_spec(tool_name)

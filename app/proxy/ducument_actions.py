@@ -1,6 +1,10 @@
 from typing import Any
 
-from app.proxy.document_repository import get_document_by_id, get_document_metadata, search_documents
+from app.proxy.document_repository import (
+    get_document_by_id,
+    get_document_metadata,
+    search_documents,
+)
 
 
 def build_docs_tool_context(tool_arguments: dict[str, Any]) -> dict[str, Any]:

@@ -4,7 +4,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 PolicyEffect = Literal["allow", "deny"]
 PolicyDecision = Literal["allow", "deny"]
 ConstraintOperator = Literal["equals", "in", "not_in"]

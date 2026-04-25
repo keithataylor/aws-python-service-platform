@@ -1,12 +1,17 @@
+import pytest
+
+from app.policy.evaluator import pdp_evaluate_agent_action
 from app.policy.models import (
-    PolicyConstraint, PolicyDocument, PolicyObligation, 
-    PolicyRule, PolicyRuleMeta, PolicyThen, PolicyWhen
+    PolicyConstraint,
+    PolicyDocument,
+    PolicyObligation,
+    PolicyRule,
+    PolicyRuleMeta,
+    PolicyThen,
+    PolicyWhen,
 )
 from app.schemas.invocation import InvocationDecisionRequest
-from app.policy.evaluator import pdp_evaluate_agent_action
 from tests.factories import build_test_policy
-
-import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -117,9 +122,12 @@ def test_evaluate_returns_first_matching_policy() -> None:
                         rationale="POLICY_ALLOW_PUBLIC_DOCS_READ",
                         obligations=[],
                     ),
-                    meta=PolicyRuleMeta(description="Allow reading public documents with docs_tool"),
+                    meta=PolicyRuleMeta(
+                        description="Allow reading public documents with docs_tool"
+                    ),
                 ),
-                # This rule also matches but should not be evaluated because the first rule already matched
+                # This rule also matches but should not be evaluated 
+                # because the first rule already matched
                 PolicyRule(
                     rule_id="Rule 2",
                     when=PolicyWhen(
@@ -191,7 +199,9 @@ def test_evaluate_invokes_context_parameters() -> None:
                             )
                         ],
                     ),
-                    meta=PolicyRuleMeta(description="Allow users with reader role to read public documents"),
+                    meta=PolicyRuleMeta(
+                        description="Allow users with reader role to read public documents"
+                    ),
                 )
             ],
         )

@@ -1,14 +1,14 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
-from app.db.connection import check_database_health
-from app.policy.models import PolicyDocument
-from app.schemas.system import HealthResponse, ServiceInfoResponse
-from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
-from app.policy.evaluator import pdp_evaluate_agent_action
+
 from app.api.deps import get_agent_policy
-
 from app.core.config import APP_VERSION, SERVICE_NAME
-
+from app.db.connection import check_database_health
+from app.policy.evaluator import pdp_evaluate_agent_action
+from app.policy.models import PolicyDocument
+from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
+from app.schemas.system import HealthResponse, ServiceInfoResponse
 
 router = APIRouter()
 

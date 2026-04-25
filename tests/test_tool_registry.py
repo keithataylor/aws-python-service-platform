@@ -1,5 +1,7 @@
-from app.proxy.tool_registry import get_tool_spec
 import pytest
+
+from app.proxy.tool_registry import get_tool_spec
+
 
 def test_tool_registry():
     tool_spec = get_tool_spec("list_documents")
