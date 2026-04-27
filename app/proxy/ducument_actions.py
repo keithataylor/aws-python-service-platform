@@ -13,22 +13,29 @@ from app.proxy.document_repository import (
 )
 
 
+class DocsToolArguments(BaseModel):
+    document_id: str = Field(min_length=1, max_length=100)
+    
+
+class ListDocumentsArguments(BaseModel):
+    query: str = Field(default="", max_length=200)
+
+
 def build_docs_tool_context(tool_arguments: dict[str, Any]) -> dict[str, Any]:
     metadata = get_document_metadata(tool_arguments["document_id"])
     return metadata
 
 
 def process_documents_retrieval_request(arguments: dict) -> dict[str, Any]:
-    results = get_document_by_id(arguments["document_id"])
+    validated_args = DocsToolArguments.model_validate(arguments)
+    document_id = validated_args.document_id
+    results = get_document_by_id(document_id)
     return {
         "results": results,
         "total_matches": 1 if results else 0,
         "returned_count": 1 if results else 0
     }
 
-class ListDocumentsArguments(BaseModel):
-    query: str = Field(default="", max_length=200)
-   
     
 def process_list_documents_request(arguments: dict) -> dict[str, Any]:
     validated_args = ListDocumentsArguments.model_validate(arguments)
