@@ -121,3 +121,14 @@ The audit record includes the normalized decision metadata, including:
 - policy version
 - policy SHA-256
 - creation timestamp
+
+## Tool argument validation
+
+MCP tool arguments remain in the proxy/tool execution layer.
+
+Document tool actions validate their expected argument shape before repository access:
+
+- `list_documents` validates `query`
+- `docs_tool` validates `document_id`
+
+This keeps caller-supplied tool input explicit and bounded before it is used for pre-PDP enrichment or post-allow execution.

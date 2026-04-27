@@ -155,8 +155,6 @@ The next backend work should be chosen only where it protects or clarifies the i
 
 Good next candidates are:
 
-- add lightweight Pydantic validation for tool argument dictionaries before post-allow business actions
-- tighten document repository tests only if repository behaviour is not already covered clearly enough through MCP integration tests
 - keep README and docs aligned with the implemented code
 - keep migration scripts linear and easy to reason about
 - avoid speculative wrapper/ToolSpec tests unless a real uncovered failure mode is identified
