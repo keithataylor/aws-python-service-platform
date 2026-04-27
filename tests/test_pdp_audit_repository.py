@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
 
+import pytest
+
 from app.audit.pdp_audit_service import insert_pdp_audit_event
 from app.db.connection import get_db_connection
 from app.schemas.pdp_audit import PDPAuditEvent
 
+pytestmark = pytest.mark.integration
 
 def test_pdp_audit_repository(use_test_db) -> None:
     

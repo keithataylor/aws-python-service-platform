@@ -292,7 +292,7 @@ aws-python-service-platform/
 │  │  └─ pdp_audit_service.py
 │  ├─ core/
 │  │  ├─ config.py
-│  │  ├─ logging.py
+│  │  └─ logging.py
 │  ├─ db/
 │  │  └─ connection.py
 │  ├─ policy/
@@ -307,11 +307,10 @@ aws-python-service-platform/
 │  │  ├─ tool_registry.py
 │  │  ├─ document_repository.py
 │  │  └─ document_actions.py
-│  ├─ schemas/
-│  │  ├─ invocation.py
-│  │  ├─ pdp_audit.py
-│  │  ├─ system.py
-│  └─ ...
+│  └─ schemas/
+│     ├─ invocation.py
+│     ├─ pdp_audit.py
+│     └─ system.py
 ├─ docs/
 ├─ migrations/
 ├─ scripts/
@@ -330,12 +329,12 @@ The intended separation is:
 - proxy orchestration in `app/proxy/wrapper.py`
 - invocation normalization in `app/proxy/normalizer.py`
 - tool registry in `app/proxy/tool_registry.py`
-- document data access in `app/proxy/document_store.py`
+- document data access in `app/proxy/document_repository.py`
 - post-allow business actions in domain-specific action modules
 - database connection boundary in `app/db/connection.py`
 - deployment/runtime config boundary in `app/core/config.py`
 - SQL migrations in `migrations/`
-- runtime and integration tests in `tests/`
+- marker-based unit and integration tests in `tests/`
 
 ## Current endpoints and surfaces
 
@@ -372,7 +371,7 @@ Important testing distinction:
 
 ## CI
 
-GitHub Actions runs the test suite on push/PR.
+GitHub Actions runs linting and tests on push/PR.
 
 CI installs the project with:
 
@@ -381,6 +380,14 @@ python -m pip install ".[dev]"
 ```
 
 The CI path uses a normal project install rather than editable install.
+
+CI currently runs:
+
+```powershell
+python -m ruff check .
+python -m pytest -m unit
+python -m pytest -m integration
+```
 
 Editable install is still useful for local development, but it is not the preferred default for this CI workflow.
 
@@ -413,15 +420,16 @@ The emphasis is on doing a smaller set of backend/platform concerns properly:
 
 ## Likely next backend work
 
-The next sensible backend work is contract tightening, not new infrastructure.
+The next backend work should remain tied to real contract gaps, not speculative refactoring.
 
-Likely candidates:
+Near-term priorities are:
 
-- add/complete wrapper and registry tests around `ToolSpec`
-- document the policy/tool/audit contract further in `docs/`
-- check remaining test coverage around denied tool calls
-- keep migration chain clean and linear
-- avoid introducing SQLAlchemy/Alembic until the current direct SQL persistence layer has justified limits
+- keep the README and docs aligned with the implemented runtime
+- only add tests where an actual uncovered enforcement or persistence behaviour is identified
+- keep the migration chain clean and linear
+- avoid introducing new infrastructure until the current direct SQL and proxy/PDP boundaries show a real limitation
+
+The project should continue to favour a small, complete, auditable runtime slice over broader framework expansion.
 
 ## Status
 
