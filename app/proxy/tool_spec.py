@@ -1,3 +1,7 @@
+"""
+Tool specification contract used by the MCP proxy wrapper.
+"""
+
 from dataclasses import dataclass
 from typing import Any, Callable
 

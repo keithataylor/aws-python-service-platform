@@ -1,4 +1,7 @@
-   
+"""
+Runtime configuration loaded from environment variables.
+"""   
+
 from functools import lru_cache
 from pathlib import Path
 
@@ -13,6 +16,8 @@ POLICY_FILE = BASE_DIR / "app" / "policies" / "agent_policy.yaml"
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     db_host: str = Field(validation_alias="DB_HOST")
     db_port: int = Field(validation_alias="DB_PORT")
     db_name: str = Field(validation_alias="DB_NAME")
@@ -20,10 +25,6 @@ class Settings(BaseSettings):
     db_password: str = Field(validation_alias="DB_PASSWORD")
     test_db_name: str = Field(validation_alias="TEST_DB_NAME")
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        extra="ignore",
-    )
 
 
 @lru_cache

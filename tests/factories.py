@@ -22,7 +22,6 @@ def build_test_policy() -> PolicyDocument:
                     resource="document",
                     constraints=[
                         PolicyConstraint(
-                            source="context",
                             field="document_visibility",
                             operator="equals",
                             value="public",

@@ -1,4 +1,6 @@
-"""Shared API dependencies."""
+"""
+Shared API dependencies.
+"""
 
 from starlette.requests import Request
 

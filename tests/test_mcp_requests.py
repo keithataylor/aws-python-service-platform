@@ -37,9 +37,8 @@ def test_normalize_tool_invocation() -> None:
         server_name="test_server",
         tool_name="docs_tool",
         action="tools/call",
-        arguments={"arg1": "value1", "arg2": 2},
         resource="test_resource",
-        context={"key": "value"},
+        decision_context={"key": "value"},
     )
 
     assert isinstance(invocation_request, InvocationDecisionRequest)
@@ -48,8 +47,7 @@ def test_normalize_tool_invocation() -> None:
     assert invocation_request.resource == "test_resource"
     assert invocation_request.tool_name == "docs_tool"
     assert invocation_request.action == "tools/call"
-    assert invocation_request.parameters == {"arg1": "value1", "arg2": 2}
-    assert invocation_request.context == {"key": "value"}
+    assert invocation_request.decision_context == {"key": "value"}
     
 
 def test_mcp_initialization(client) -> None:
@@ -310,9 +308,7 @@ def test_mcp_tool_call_with_decision_denied(client, override_loaded_policy) -> N
     assert policy_sha256 is not None and len(policy_sha256) == 64  # Assuming it's a SHA-256 hash
 
 
-#overrides the tool spec or post_allow function to raise an exception
-# performs the MCP request
-# asserts the returned error shape is correct
+
 def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
 
     init_response = client.post(test_url, json=test_json, headers=test_headers)

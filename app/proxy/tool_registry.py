@@ -1,3 +1,7 @@
+"""
+Registry mapping MCP tool names to proxy tool specifications.
+"""
+
 from app.proxy.ducument_actions import (
     build_docs_tool_context,
     process_documents_retrieval_request,
@@ -24,6 +28,15 @@ TOOL_SPECS: dict[str, ToolSpec] = {
 
 
 def get_tool_spec(tool_name: str) -> ToolSpec:
+    """
+    Retrieves the ToolSpec for the given tool name.
+    Args:
+        tool_name (str): The name of the tool for which to retrieve the specification.
+    Returns:
+        ToolSpec: The specification of the requested tool.
+    Raises:
+        ValueError: If the tool specification is not found.
+    """
     try:
         return TOOL_SPECS[tool_name]
     except KeyError as exc:

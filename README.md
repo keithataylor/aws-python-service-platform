@@ -97,8 +97,12 @@ The current runtime contract is intentionally narrow and explicit.
 - `resource` is singular throughout the runtime contract.
 - `resource` is not a list.
 - `rationale` remains `list[str]`.
-- Caller-supplied tool arguments are represented as `parameters`.
-- Trusted runtime-derived facts are represented as `context`.
+- MCP tool entrypoints pass caller-supplied values to the proxy as `tool_arguments`.
+- `tool_arguments` are used by the proxy for pre-PDP enrichment and post-allow execution.
+- The PDP request contains `decision_context`.
+- `decision_context` is the server-prepared set of facts the PDP is allowed to evaluate.
+- Policy constraints evaluate against `decision_context`.
+- The PDP does not evaluate raw caller-supplied tool arguments.
 
 ### Audit contract
 
@@ -134,17 +138,19 @@ Current policy semantics are intentionally simple:
 - rules are evaluated top-to-bottom
 - first matching rule wins
 - `default_decision` applies if nothing matches
-- `parameters` represent caller-supplied tool inputs
-- `context` represents trusted derived facts
+- policy constraints evaluate against `decision_context`
+- `decision_context` contains server-prepared policy facts
+- raw caller-supplied tool arguments are not evaluated directly by the PDP
 - decisions are deterministic
 - rationale codes are returned as a list of strings
 
 For the current document example:
 
-- `list_documents(query)` uses caller input in `parameters`
-- `docs_tool(document_id)` uses caller input in `parameters`
-- trusted `document_visibility` is derived from the document store
-- trusted `document_visibility` is supplied in `context`
+- `list_documents(query)` receives caller input as a tool argument
+- `docs_tool(document_id)` receives caller input as a tool argument
+- the proxy uses tool arguments to perform any required pre-PDP enrichment
+- trusted `document_visibility` is derived from the document repository
+- trusted `document_visibility` is supplied to the PDP in `decision_context`
 - policy decides using the normalized invocation request, not raw MCP JSON
 
 ## Current document example

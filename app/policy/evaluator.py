@@ -1,4 +1,6 @@
-"""Agent policy decision service."""
+"""
+Deterministic PDP evaluator for loaded policy documents and invocation requests.
+"""
 
 from app.policy.models import PolicyConstraint, PolicyDocument, PolicyRule
 from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
@@ -8,11 +10,7 @@ def _constraint_matches(
     constraint: PolicyConstraint,
     payload: InvocationDecisionRequest,
 ) -> bool:
-    
-    if constraint.source == "parameters":
-        actual_value = payload.parameters.get(constraint.field)
-    elif constraint.source == "context":
-        actual_value = payload.context.get(constraint.field)  
+    actual_value = payload.decision_context.get(constraint.field)
 
     if constraint.operator == "equals":
         return actual_value == constraint.value
@@ -52,6 +50,17 @@ def pdp_evaluate_agent_action(
         payload: InvocationDecisionRequest, 
         policy: PolicyDocument
         ) -> InvocationDecisionResponse:  
+    """
+    Evaluates an agent's tool invocation request against the provided policy document.
+    Args:
+        payload (InvocationDecisionRequest): The normalized tool invocation request 
+        containing details about the agent, tool, action, resource, and decision context.
+        policy (PolicyDocument): The policy document containing rules and default decision
+        for evaluating the request.
+    Returns:
+        InvocationDecisionResponse: The decision response containing the decision, rationale,
+        and obligations.
+    """
 
     for rule in policy.rules:  
         if _rule_matches(rule, payload):

@@ -1,3 +1,7 @@
+"""
+PostgreSQL-backed document access for proxy tool actions and policy context.
+"""
+
 from typing import Any
 
 from app.db.connection import get_db_connection

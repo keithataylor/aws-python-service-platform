@@ -4,7 +4,6 @@ from app.policy.evaluator import pdp_evaluate_agent_action
 from app.policy.models import (
     PolicyConstraint,
     PolicyDocument,
-    PolicyObligation,
     PolicyRule,
     PolicyRuleMeta,
     PolicyThen,
@@ -26,11 +25,9 @@ def test_evaluate_agent_action_service_returns_allow_for_matching_constraint() -
             tool_name="docs_tool",
             action="document.read",
             resource="document",
-            parameters={"document_id": "doc3"},
-            context={
-                "document_visibility": "public",
-                "user_role": "reader"
-            },
+            decision_context={
+                  "document_visibility": "public",
+            }
         ),
         build_test_policy()
     )
@@ -48,10 +45,10 @@ def test_evaluate_agent_action_service_returns_deny_for_non_matching_constraint(
             tool_name="docs_tool",
             action="document.read",
             resource="document",
-            parameters={"document_id": "doc3"},
-            context={
+            decision_context={
                 "document_visibility": "unknown",
-                "user_role": "reader"},
+                "user_role": "reader"
+            }
         ),
         build_test_policy()
     )
@@ -68,11 +65,10 @@ def test_evaluate_server_name_participates_in_policy_evaluation() -> None:
             tool_name="docs_tool",
             action="document.read",
             resource="document",
-            parameters={"document_id": "doc3"},
-            context={
+            decision_context={
                 "document_visibility": "public",
                 "user_role": "reader"
-            },
+            }
         ),
         build_test_policy()
     )
@@ -90,11 +86,10 @@ def test_evaluate_returns_first_matching_policy() -> None:
             tool_name="docs_tool",
             action="document.read",
             resource="document",
-            parameters={"document_id": "doc3"},
-            context={
+            decision_context={
                 "document_visibility": "public",
                 "user_role": "reader"
-            },
+            }
         ),
         PolicyDocument(
             version="1.0",
@@ -110,7 +105,6 @@ def test_evaluate_returns_first_matching_policy() -> None:
                         resource="document",
                         constraints=[
                             PolicyConstraint(
-                                source="context",
                                 field="document_visibility",
                                 operator="equals",
                                 value="public",
@@ -137,7 +131,6 @@ def test_evaluate_returns_first_matching_policy() -> None:
                         resource="document",
                         constraints=[
                             PolicyConstraint(
-                                source="context",
                                 field="document_visibility",
                                 operator="equals",
                                 value="public",
@@ -158,70 +151,5 @@ def test_evaluate_returns_first_matching_policy() -> None:
     assert response.rationale == ["POLICY_ALLOW_PUBLIC_DOCS_READ"]
 
 
-def test_evaluate_invokes_context_parameters() -> None:
-    invocation_request = InvocationDecisionRequest(
-        request_id="request-123",
-        agent_id="agent-123",
-        server_name="docs_mcp",
-        tool_name="docs_tool",
-        action="document.read",
-        resource="document",
-        parameters={},
-        context={"user_role": "reader"},
-    )
-    policy_document =PolicyDocument(
-            version="1.0",
-            default_decision="deny",
-            rules=[
-                PolicyRule(
-                    rule_id="Rule 1",
-                    when=PolicyWhen(
-                        tool_name="docs_tool",
-                        server_name="docs_mcp",
-                        action="document.read",
-                        resource="document",
-                        constraints=[
-                            PolicyConstraint(
-                                source="context",
-                                field="user_role",
-                                operator="equals",
-                                value="reader",
-                            )
-                        ]
-                    ),
-                    then=PolicyThen(
-                        effect="allow",
-                        rationale="POLICY_ALLOW_READERS_TO_READ_PUBLIC_DOCS",
-                        obligations=[
-                            PolicyObligation(
-                                obligation_type="audit_log",
-                                parameters={"user_role": "reader"},
-                            )
-                        ],
-                    ),
-                    meta=PolicyRuleMeta(
-                        description="Allow users with reader role to read public documents"
-                    ),
-                )
-            ],
-        )
-    response = pdp_evaluate_agent_action( invocation_request, policy_document)
-    
-    assert response.decision == "allow"
-    assert response.rationale == ["POLICY_ALLOW_READERS_TO_READ_PUBLIC_DOCS"]
 
-    invocation_request = InvocationDecisionRequest(
-        request_id="request-123",
-        agent_id="agent-123",
-        server_name="docs_mcp",
-        tool_name="docs_tool",
-        action="document.read",
-        resource="document",
-        parameters={},
-        context={"user_role": "writer"},
-    )
 
-    response = pdp_evaluate_agent_action( invocation_request, policy_document)
-
-    assert response.decision == "deny"
-    assert response.rationale == ["DEFAULT_DENY"]

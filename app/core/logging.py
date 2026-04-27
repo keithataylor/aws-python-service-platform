@@ -1,3 +1,7 @@
+"""
+Application logging configuration and structured runtime event helpers.
+"""
+
 import json
 import logging
 import sys

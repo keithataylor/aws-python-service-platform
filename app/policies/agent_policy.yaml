@@ -9,8 +9,7 @@ rules:
       action: document.read
       resource: document
       constraints:
-        - source: context
-          field: document_visibility
+        - field: document_visibility
           operator: equals
           value: public
     then:

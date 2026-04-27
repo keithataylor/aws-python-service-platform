@@ -1,3 +1,7 @@
+"""
+Proxy orchestration for MCP tool invocations and PDP enforcement.
+"""
+
 from datetime import datetime, timezone
 from typing import Any
 
@@ -37,9 +41,8 @@ def proxy_process_tool_invocation(
         server_name=MCP_SERVER_NAME,
         tool_name=spec.tool_name,
         action=spec.invocation_action,
-        arguments=tool_arguments,
         resource=spec.resource, 
-        context=derived_context
+        decision_context=derived_context
     )
 
     evaluation = pdp_evaluate_agent_action(normalize_request, loaded_policy.document)

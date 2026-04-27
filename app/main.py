@@ -1,4 +1,8 @@
 
+"""
+Application assembly for the FastAPI service and mounted FastMCP runtime.
+"""
+
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 from fastmcp import FastMCP
@@ -27,7 +31,6 @@ app = FastAPI(title=SERVICE_NAME, lifespan=combine_lifespans(mcp_app.lifespan, l
 
 app.mount("/mcp", mcp_app)
 
-#app.state.agent_policy = load_agent_policy()
 loaded_policy = load_agent_policy()
 app.state.loaded_policy = loaded_policy
 mcp_app.state.loaded_policy = loaded_policy

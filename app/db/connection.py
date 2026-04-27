@@ -1,3 +1,7 @@
+"""
+Database connection and health-check helpers.
+"""
+
 import psycopg
 
 from app.core.config import get_settings

@@ -1,47 +1,178 @@
 # TRACKER.md
 
 ## Current aim
-Build a recruiter-facing Python/AWS backend service that is evolving toward an MCP-facing agent runtime access-control architecture with clear proxy / PEP / PDP separation.
 
-The primary system story is agent tool-call control and runtime policy enforcement.
-The supporting engineering story is backend/platform implementation depth, including schemas, service design, persistence, async/concurrency, observability, and AWS deployment shape.
+Build a recruiter-facing Python/AWS backend service that demonstrates an MCP-facing agent runtime policy decision point (PDP), proxy-style enforcement surface, PostgreSQL-backed persistence, and auditability.
 
-## Current implemented
+The primary system story is:
+
+- agent tool-call control
+- deterministic runtime policy enforcement
+- clear proxy / PEP / PDP separation
+- trusted server-prepared decision context
+- auditable allow/deny decisions
+
+The supporting engineering story is backend/platform implementation depth:
+
+- FastAPI service structure
+- FastMCP runtime surface
+- typed schemas and validation
+- PostgreSQL persistence
+- structured logging
+- Docker-based local development
+- GitHub Actions CI
+- Ruff linting and pytest coverage
+
+## Current implemented state
+
+The current stable slice includes:
+
 - FastAPI service foundation
-- health and service-info endpoints
-- typed task submission/status example
-- externalized YAML policy loading
-- agent action evaluation endpoint
-- deterministic allow/deny response shape
-- mounted FastMCP `/mcp` boundary
-- MCP tool discovery and tool invocation tests
-- `list_documents` and `docs_tool` MCP tools
-- proxy wrapper flow for tool invocation normalization and PDP evaluation
-- tool registry/spec pattern with per-tool pre-PDP and post-allow handling
-- seeded in-memory document store with public/private visibility metadata
-- document search and read flow using shared trusted document data
+- health endpoint
+- service-info endpoint
+- mounted FastMCP `/mcp` surface
+- MCP initialization and tool discovery
+- MCP tools:
+  - `list_documents`
+  - `docs_tool`
+- proxy wrapper flow for MCP tool invocation handling
+- frozen `ToolSpec` dataclass registry
+- per-tool pre-PDP enrichment and post-allow execution
+- normalized `InvocationDecisionRequest`
+- `decision_context` as the PDP decision input
+- deterministic YAML-backed policy evaluation
+- PostgreSQL-backed document repository
+- PostgreSQL-backed PDP audit table
+- dedicated PDP audit service/repository layer
+- dedicated PDP audit logger
+- local Docker Compose PostgreSQL workflow
+- rerunnable SQL migrations
+- isolated test database workflow
+- marker-based unit and integration tests
+- GitHub Actions CI running:
+  - Ruff lint
+  - unit tests
+  - integration tests
+
+## Current runtime contract
+
+The current runtime contract is:
+
+- MCP tools expose explicit caller-supplied arguments such as `query` and `document_id`.
+- Tool entrypoints pass those values to the proxy as `tool_arguments`.
+- `tool_arguments` remain in the proxy/tool execution layer.
+- The proxy uses `tool_arguments` for:
+  - pre-PDP enrichment
+  - post-allow execution
+- The PDP receives `decision_context`.
+- `decision_context` is the server-prepared set of facts the PDP is allowed to evaluate.
+- Policy constraints evaluate only against `decision_context`.
+- The PDP does not evaluate raw caller-supplied tool arguments.
+- `resource` is singular.
+- `rationale` remains `list[str]`.
+- Every PDP decision is persisted as an audit row.
+
+The fuller contract is documented in:
+
+- `docs/runtime_contract.md`
 
 ## Current architecture direction
-- MCP-facing proxy as the enforcement path for tool calls
-- normalized internal invocation decision requests for PDP evaluation
-- semantic action mapping per tool (for example `document.search`, `document.read`)
-- trusted pre-PDP context derivation for document-specific policy facts
-- post-allow business execution separated from policy evaluation
-- clear separation between proxy orchestration, document store helpers, and domain actions
+
+The architecture direction is intentionally narrow:
+
+- FastMCP owns the raw MCP / JSON-RPC boundary.
+- Thin MCP tool functions call the proxy wrapper.
+- The proxy wrapper owns orchestration.
+- The tool registry maps tool names to static policy metadata and handlers.
+- Pre-PDP functions derive trusted decision facts.
+- The PDP evaluates normalized requests against loaded YAML policy.
+- Post-allow functions execute business actions only after an allow decision.
+- PDP decisions are persisted for audit.
+- Runtime logging and audit logging remain separate.
+
+## Current database state
+
+The current PostgreSQL-backed flow includes:
+
+- `documents` table for document search/read examples
+- `pdp_audit` table for PDP decision audit events
+
+Current migration chain:
+
+- `001_create_documents_table.sql`
+- `002_seed_documents.sql`
+- `003_create_pdp_audit_table.sql`
+
+Current schema decisions:
+
+- `pdp_audit.resource` is `TEXT NOT NULL`
+- `pdp_audit.rationale` is `TEXT[] NOT NULL`
+- `pdp_audit.policy_sha256` is included in the base audit migration
+
+## Current test coverage
+
+The current tests cover:
+
+- tool registry lookup
+- invalid tool lookup
+- policy evaluation allow/default-deny behaviour
+- server-name participation in policy evaluation
+- first matching policy rule wins
+- decision-context-based constraint evaluation
+- health endpoint success
+- health endpoint database failure
+- service-info endpoint
+- `/api/v1/agent-actions/evaluate`
+- MCP initialization
+- MCP tools/list
+- MCP list_documents tool calls
+- MCP docs_tool allow path
+- MCP docs_tool deny path
+- MCP post-allow failure handling
+- PDP audit row persistence
+- policy SHA-256 audit persistence
+- test DB isolation
 
 ## Out of scope for now
+
+The project is not currently trying to implement:
+
+- custom MCP protocol handling
 - real credential brokerage
 - IdP integration
-- database-backed policy storage
+- multi-tenant SaaS features
+- database-backed policy authoring/storage
+- Kubernetes deployment
 - production-grade downstream forwarding to external MCP servers
+- SQLAlchemy/Alembic unless direct SQL becomes a real limitation
+- broad AI governance platform features
 
-## Immediate next code goal
-Replace the seeded in-memory document store with PostgreSQL-backed document persistence while preserving the current proxy / PDP / tool registry flow.
+## Immediate next code direction
 
-## Later-phase backend concerns
-- PostgreSQL-backed policy/audit persistence
-- typed persistence models for decisions, rules, and execution records
-- SQLAlchemy and Alembic integration where justified
-- auth-derived agent identity passed into the proxy flow
-- async/concurrency patterns for evaluation and future proxy/tool mediation
-- background task/workflow handling where justified
+Do not add new infrastructure yet.
+
+The next backend work should be chosen only where it protects or clarifies the implemented runtime contract.
+
+Good next candidates are:
+
+- add lightweight Pydantic validation for tool argument dictionaries before post-allow business actions
+- tighten document repository tests only if repository behaviour is not already covered clearly enough through MCP integration tests
+- keep README and docs aligned with the implemented code
+- keep migration scripts linear and easy to reason about
+- avoid speculative wrapper/ToolSpec tests unless a real uncovered failure mode is identified
+
+## Current project status
+
+The current stable implementation demonstrates:
+
+- MCP tool call
+- proxy orchestration
+- server-prepared decision context
+- deterministic PDP policy decision
+- PostgreSQL-backed business data
+- PostgreSQL-backed PDP audit record
+- structured runtime/audit logging
+- local and CI test coverage
+- linted project structure
+
+This is now a credible small backend/platform slice for demonstrating agent-runtime policy enforcement rather than a generic API scaffold.

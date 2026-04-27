@@ -1,3 +1,7 @@
+"""
+Service layer for recording PDP audit events.
+"""
+
 import json
 import logging
 

@@ -25,8 +25,7 @@ def test_evaluate_agent_action_endpoint_returns_default_deny(client) -> None:
             "tool_name": "crm_tool",
             "action": "tool.call",
             "resource": "crm.contacts",
-            "parameters": {},
-            "context": {},
+            "decision_context": {}
         },
     )
     assert response.status_code == 200
@@ -47,8 +46,7 @@ def test_evaluate_agent_action_rejects_missing_agent_id(
             "tool_name": "crm_tool",
             "action": "tool.call",
             "resource": "crm.contacts",
-            "parameters": {},
-            "context": {},
+            "decision_context": {},
         },
     )
     assert response.status_code == 422
@@ -66,8 +64,9 @@ def test_evaluate_agent_action_endpoint_returns_deny_for_non_matching_constraint
             "tool_name": "docs_tool",
             "action": "document.read",
             "resource": "document",
-            "parameters": {"document_id": "doc3"},
-            "context": {"document_visibility": "unknown"},
+            "decision_context": {
+                "document_visibility": "unknown"
+            },
         }
     )
     assert response.status_code == 200
@@ -90,10 +89,8 @@ def test_evaluate_agent_action_endpoint_returns_allow_for_matching_constraint(
             "tool_name": "docs_tool",
             "action": "document.read",
             "resource": "document",
-            "parameters": {"document_id": "doc3"},
-            "context": {
-                "document_visibility": "public",
-                "user_role": "reader"
+            "decision_context": {
+                "document_visibility": "public"
             },
         }
     )
