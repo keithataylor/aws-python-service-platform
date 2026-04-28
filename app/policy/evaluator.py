@@ -2,47 +2,65 @@
 Deterministic PDP evaluator for loaded policy documents and invocation requests.
 """
 
+from typing import Any
+
 from app.policy.models import PolicyConstraint, PolicyDocument, PolicyRule
 from app.schemas.invocation import InvocationDecisionRequest, InvocationDecisionResponse
 
 
-def _constraint_matches(
-    constraint: PolicyConstraint,
-    payload: InvocationDecisionRequest,
+def _constraints_match(
+    constraints: list[PolicyConstraint],
+    decision_context: dict[str, Any],
 ) -> bool:
-    actual_value = payload.decision_context.get(constraint.field)
+    for constraint in constraints:
+        actual_value = decision_context.get(constraint.field)
 
-    if constraint.operator == "equals":
-        return actual_value == constraint.value
+        if actual_value is None:
+            return False
 
-    if constraint.operator == "in":
-        return actual_value in constraint.value
+        if constraint.operator == "equals":
+            if actual_value != constraint.value:
+                return False
+            continue
 
-    if constraint.operator == "not_in":
-        return actual_value not in constraint.value
+        if constraint.operator == "in":
+            if not isinstance(constraint.value, list):
+                return False
+            if actual_value not in constraint.value:
+                return False
+            continue
 
-    return False
+        if constraint.operator == "not_in":
+            if not isinstance(constraint.value, list):
+                return False
+            if actual_value in constraint.value:
+                return False
+            continue
+
+        return False
+
+    return True
 
 
 def _rule_matches(
     rule: PolicyRule,
     payload: InvocationDecisionRequest,
 ) -> bool:
-    if rule.when.tool_name != payload.tool_name:     
+    if rule.when.tool_name != payload.tool_name:
         return False
 
     if rule.when.server_name != payload.server_name:
         return False
-    
+
     if rule.when.action != payload.action:
         return False
 
     if rule.when.resource != payload.resource:
         return False
 
-    return all(
-        _constraint_matches(constraint, payload)
-        for constraint in rule.when.constraints
+    return _constraints_match(
+        constraints=rule.when.constraints,
+        decision_context=payload.decision_context,
     )
 
 
