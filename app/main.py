@@ -16,6 +16,7 @@ from app.api.deps import get_loaded_policy
 from app.api.routes import api_v1_router, router
 from app.core.config import SERVICE_NAME
 from app.policy.loader import load_agent_policy
+from app.proxy.identity import resolve_agent_identity_from_mcp_meta
 from app.proxy.wrapper import proxy_process_tool_invocation
 
 
@@ -50,11 +51,13 @@ async def list_documents(query: str,
 ) -> dict:
     """List all document titles and summaries matching the query."""
 
+    agent_identity = resolve_agent_identity_from_mcp_meta(ctx.request_context.meta)
+
     proxy_response = proxy_process_tool_invocation(
-        agent_id=resolve_agent_id(ctx),
-        tool_name="list_documents",
-        tool_arguments={"query": query},
-        loaded_policy=get_loaded_policy(request)
+        agent_id = agent_identity.agent_id,
+        tool_name = "list_documents",
+        tool_arguments = {"query": query},
+        loaded_policy = get_loaded_policy(request)
     )
 
     return proxy_response
@@ -69,12 +72,13 @@ async def docs_tool(document_id: str,
     Example tool implementation that normalizes 
     the incoming MCP request and simulates a response.
     """
-   
+    agent_identity = resolve_agent_identity_from_mcp_meta(ctx.request_context.meta)
+    
     proxy_response = proxy_process_tool_invocation(
-        agent_id=resolve_agent_id(ctx),
-        tool_name="docs_tool",
-        tool_arguments={"document_id": document_id},
-        loaded_policy=get_loaded_policy(request)
+        agent_id = agent_identity.agent_id,
+        tool_name = "docs_tool",
+        tool_arguments = {"document_id": document_id},
+        loaded_policy = get_loaded_policy(request)
     )    
 
     return proxy_response
