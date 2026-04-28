@@ -53,7 +53,7 @@ async def list_documents(query: str,
     )
 
     proxy_response = proxy_process_tool_invocation(
-        agent_id = agent_identity.agent_id,
+        agent_identity = agent_identity,
         tool_name = "list_documents",
         tool_arguments = {"query": query},
         loaded_policy = get_loaded_policy(request)
@@ -77,7 +77,7 @@ async def docs_tool(document_id: str,
     )
 
     proxy_response = proxy_process_tool_invocation(
-        agent_id = agent_identity.agent_id,
+        agent_identity = agent_identity,
         tool_name = "docs_tool",
         tool_arguments = {"document_id": document_id},
         loaded_policy = get_loaded_policy(request)

@@ -132,3 +132,17 @@ Document tool actions validate their expected argument shape before repository a
 - `docs_tool` validates `document_id`
 
 This keeps caller-supplied tool input explicit and bounded before it is used for pre-PDP enrichment or post-allow execution.
+
+## Agent identity in the proxy
+
+MCP tool entrypoints resolve caller identity into `ResolvedAgentIdentity`.
+
+The proxy receives the resolved identity object.
+
+The proxy currently uses `agent_identity.agent_id` for:
+
+- PDP invocation request `agent_id`
+- PDP audit event `agent_id`
+- runtime logging where agent identity is needed
+
+Additional identity facts such as `roles`, `tenant_id`, or `auth_method` can later be added to `decision_context` when policy rules require them.

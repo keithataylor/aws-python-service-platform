@@ -10,20 +10,21 @@ from app.core.logging import app_log_event
 from app.policy.evaluator import pdp_evaluate_agent_action
 from app.policy.models import LoadedPolicy
 from app.proxy.config import MCP_SERVER_NAME
+from app.proxy.identity import ResolvedAgentIdentity
 from app.proxy.normalizer import normalize_tool_invocation
 from app.proxy.tool_registry import get_tool_spec
 from app.schemas.pdp_audit import PDPAuditEvent
 
 
 def proxy_process_tool_invocation(
-        agent_id: str, tool_name: str, 
+        agent_identity: ResolvedAgentIdentity, tool_name: str, 
         tool_arguments: dict, loaded_policy: LoadedPolicy
         ) -> dict[str, Any]:
     """
     Process and route incoming MCP tool calls to the appropriate handlers 
     based on the tool name and arguments.
     Args:
-        agent_id (str): The ID of the agent making the request.
+        agent_identity (ResolvedAgentIdentity): The identity of the agent making the request.
         tool_name (str): The name of the tool being called.
         tool_arguments (dict): A dictionary of arguments passed to the tool.
         loaded_policy (LoadedPolicy): The loaded policy to be applied for evaluating the action.
@@ -37,7 +38,7 @@ def proxy_process_tool_invocation(
     derived_context = spec.pre_pdp(tool_arguments) if spec.pre_pdp else {}   
 
     normalize_request = normalize_tool_invocation(
-        agent_id=agent_id,
+        agent_id=agent_identity.agent_id,
         server_name=MCP_SERVER_NAME,
         tool_name=spec.tool_name,
         action=spec.invocation_action,

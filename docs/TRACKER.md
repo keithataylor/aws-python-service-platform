@@ -53,6 +53,9 @@ The current stable slice includes:
   - Ruff lint
   - unit tests
   - integration tests
+- resolved agent identity boundary
+- API-key identity adapter with MCP metadata fallback
+- proxy receives `ResolvedAgentIdentity` and uses `agent_identity.agent_id` for PDP/audit
 
 ## Current runtime contract
 
