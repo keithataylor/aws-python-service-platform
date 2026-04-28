@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     db_user: str = Field(validation_alias="DB_USER")
     db_password: str = Field(validation_alias="DB_PASSWORD")
     test_db_name: str = Field(validation_alias="TEST_DB_NAME")
+    
+    agent_api_key: str | None = Field(default=None, validation_alias="AGENT_API_KEY")
+    agent_id: str = Field(default="local-dev-agent", validation_alias="AGENT_ID")
 
 
 
