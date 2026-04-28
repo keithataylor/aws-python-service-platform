@@ -450,3 +450,25 @@ The current stable slice is:
 - PostgreSQL-backed audit record
 - structured runtime logging
 - passing local and CI tests
+
+## Agent identity resolution
+
+MCP tool entrypoints resolve caller identity before invoking the proxy.
+
+Current identity resolution flow:
+
+- API key header is checked first.
+- If a configured API key matches, the runtime resolves the configured `agent_id`.
+- If no valid API key identity is resolved, MCP request metadata may provide `agent_id`.
+- If no usable identity source exists, the runtime uses `unknown-agent`.
+
+The resolver returns a `ResolvedAgentIdentity` object containing:
+
+- `agent_id`
+- `auth_method`
+- optional `tenant_id`
+- optional `roles`
+
+The proxy currently receives `agent_identity.agent_id` as the stable agent identifier for PDP evaluation and audit persistence.
+
+The identity resolver is the intended seam for later JWT, OAuth/OIDC, gateway-injected identity, or other customer-specific authentication methods.

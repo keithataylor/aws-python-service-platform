@@ -132,6 +132,9 @@ The current tests cover:
 - PDP audit row persistence
 - policy SHA-256 audit persistence
 - test DB isolation
+- resolved agent identity boundary
+- API-key identity adapter
+- MCP metadata fallback
 
 ## Out of scope for now
 
@@ -172,5 +175,8 @@ The current stable implementation demonstrates:
 - structured runtime/audit logging
 - local and CI test coverage
 - linted project structure
+- resolved agent identity boundary
+- API-key identity adapter
+- MCP metadata fallback
 
 This is now a credible small backend/platform slice for demonstrating agent-runtime policy enforcement rather than a generic API scaffold.
