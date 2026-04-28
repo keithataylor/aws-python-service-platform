@@ -39,10 +39,6 @@ mcp_app.state.loaded_policy = loaded_policy
 app.include_router(router)  
 app.include_router(api_v1_router)
 
-def resolve_agent_id(ctx: Context) -> str:
-    if ctx.request_context.meta:
-        return ctx.request_context.meta.get("agent_id", "unknown-agent")
-    return "unknown-agent"
 
 @mcp.tool(name="list_documents")
 async def list_documents(query: str, 
@@ -73,7 +69,7 @@ async def docs_tool(document_id: str,
     the incoming MCP request and simulates a response.
     """
     agent_identity = resolve_agent_identity_from_mcp_meta(ctx.request_context.meta)
-    
+
     proxy_response = proxy_process_tool_invocation(
         agent_id = agent_identity.agent_id,
         tool_name = "docs_tool",
