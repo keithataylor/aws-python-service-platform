@@ -136,10 +136,11 @@ The current tests cover:
 - MCP post-allow failure handling
 - PDP audit row persistence
 - policy SHA-256 audit persistence
-- test DB isolation
 - resolved agent identity boundary
 - API-key identity adapter
 - MCP metadata fallback
+- API-key-resolved agent identity persisted in PDP audit rows
+- test DB isolation
 
 ## Out of scope for now
 

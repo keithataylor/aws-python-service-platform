@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 
+from app.core.config import get_settings
 from app.db.connection import get_db_connection
 from app.proxy.normalizer import normalize_tool_invocation
 from app.proxy.tool_registry import TOOL_SPECS
@@ -349,3 +350,54 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
     assert json_out["result"]["isError"] is True
     assert "Simulated post_allow failure" in json_out["result"]["content"][0]["text"]
     
+
+
+def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(client, monkeypatch) -> None:
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE pdp_audit RESTART IDENTITY;")
+
+    test_agent_id = "test_agent_456"
+    monkeypatch.setattr(get_settings(), "agent_api_key", "test_api_key_456")
+    monkeypatch.setattr(get_settings(), "agent_id", test_agent_id)
+
+    init_response = client.post(test_url, json=test_json, headers=test_headers)
+    session_id = init_response.headers.get("Mcp-Session-Id")
+    
+    response = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {
+                "name": "docs_tool", 
+                "arguments": {"document_id": "test_doc_public_1"}
+            }
+        },
+        headers={
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json",
+            "Mcp-Session-Id": session_id,
+            "X-Agent-Api-Key": "test_api_key_456"
+        },
+    )
+
+    assert response.status_code == 200
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            #query latest pdp_audit row !
+            cursor.execute(
+                """
+                SELECT agent_id FROM pdp_audit
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            )
+            audit_record = cursor.fetchone()
+
+    assert audit_record is not None
+    assert audit_record[0] == test_agent_id
+    print(f"Audit record agent_id: {audit_record[0]}, expected: {test_agent_id}")
