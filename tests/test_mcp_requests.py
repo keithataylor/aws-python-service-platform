@@ -3,7 +3,6 @@ from typing import Any
 
 import pytest
 
-from app.core.config import get_settings
 from app.db.connection import get_db_connection
 from app.proxy.normalizer import normalize_tool_invocation
 from app.proxy.tool_registry import TOOL_SPECS
@@ -31,6 +30,20 @@ test_json = init_request["json"]
 test_headers = init_request["headers"]
     
 
+def mcp_headers(session_id: str, *, api_key: str | None = "test-api-key") -> dict[str, str]:
+    headers = {
+        "Accept": "application/json, text/event-stream",
+        "Content-Type": "application/json",
+        "Mcp-Session-Id": session_id,
+    }
+
+    if api_key is not None:
+        headers["X-Agent-Api-Key"] = api_key
+
+    return headers
+
+
+
 def test_normalize_tool_invocation() -> None:
 
     invocation_request = normalize_tool_invocation(
@@ -51,6 +64,7 @@ def test_normalize_tool_invocation() -> None:
     assert invocation_request.decision_context == {"key": "value"}
     
 
+
 def test_mcp_initialization(client) -> None:
    
     response = client.post(test_url, json=test_json, headers=test_headers)
@@ -59,6 +73,7 @@ def test_mcp_initialization(client) -> None:
     assert '"jsonrpc":"2.0"' in response.text
     assert '"id":1' in response.text
     assert '"result":{"protocolVersion":"2025-06-18"' in response.text
+
 
 
 def test_mcp_returns_tools_list(client) -> None:
@@ -92,9 +107,11 @@ def test_mcp_returns_tools_list(client) -> None:
     assert "list_documents" in tool_list
           
 
-def test_list_documents_with_query_param_returns_document(client) -> None:
-    init_response = client.post(test_url, json=test_json, headers=test_headers)
 
+def test_list_documents_with_query_param_returns_document(
+        client, configured_agent_identity ) -> None:
+
+    init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
 
     response = client.post(
@@ -108,11 +125,10 @@ def test_list_documents_with_query_param_returns_document(client) -> None:
                 "arguments": {"query": "Document 1"}
             }
         },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id
-        },
+        headers=mcp_headers(
+            session_id=session_id, 
+            api_key=configured_agent_identity["api_key"]
+        )
     )
 
     assert response.status_code == 200
@@ -131,10 +147,11 @@ def test_list_documents_with_query_param_returns_document(client) -> None:
     assert isinstance(returned_count, int) and returned_count == 1
 
 
-def test_list_documents_with_empty_query_returns_all_public_documents(client) -> None:
+
+def test_list_documents_with_empty_query_returns_all_public_documents(
+        client, configured_agent_identity ) -> None:
   
     init_response = client.post(test_url, json=test_json, headers=test_headers)
-
     session_id = init_response.headers.get("Mcp-Session-Id")
 
     response = client.post(
@@ -148,11 +165,10 @@ def test_list_documents_with_empty_query_returns_all_public_documents(client) ->
                 "arguments": {"query": ""}
             }
         },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id
-        },
+        headers=mcp_headers(
+            session_id=session_id, 
+            api_key=configured_agent_identity["api_key"]
+        )
     )
 
     assert response.status_code == 200
@@ -172,7 +188,9 @@ def test_list_documents_with_empty_query_returns_all_public_documents(client) ->
     assert isinstance(returned_count, int) and returned_count >= 1
    
 
-def test_docs_tool_with_document_id_returns_correct_document(client) -> None:
+
+def test_docs_tool_with_document_id_returns_correct_document(
+        client, configured_agent_identity ) -> None:
     
     init_response = client.post(test_url, json=test_json, headers=test_headers)
 
@@ -189,11 +207,10 @@ def test_docs_tool_with_document_id_returns_correct_document(client) -> None:
                 "arguments": {"document_id": "test_doc_public_1"}
             }
         },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id
-        },
+        headers=mcp_headers(
+            session_id=session_id, 
+            api_key=configured_agent_identity["api_key"]
+        )
     )
 
     assert response.status_code == 200
@@ -206,9 +223,10 @@ def test_docs_tool_with_document_id_returns_correct_document(client) -> None:
    
 
 
-def test_mcp_tool_call_and_audit_record(client) -> None:
+def test_mcp_tool_call_and_audit_record(
+        client, configured_agent_identity ) -> None:
+    
     init_response = client.post(test_url, json=test_json, headers=test_headers)
-
     session_id = init_response.headers.get("Mcp-Session-Id")
 
     with get_db_connection() as conn:
@@ -226,11 +244,10 @@ def test_mcp_tool_call_and_audit_record(client) -> None:
                 "arguments": {"document_id": "test_doc_public_1"}
             }
         },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id
-        },
+        headers=mcp_headers(
+            session_id=session_id, 
+            api_key=configured_agent_identity["api_key"]
+        )
     )
 
     assert response.status_code == 200
@@ -258,15 +275,16 @@ def test_mcp_tool_call_and_audit_record(client) -> None:
    
     
 
-def test_mcp_tool_call_with_decision_denied(client, override_loaded_policy) -> None:
+def test_mcp_tool_call_with_decision_denied(
+    client, override_loaded_policy, configured_agent_identity ) -> None:
     
     init_response = client.post(test_url, json=test_json, headers=test_headers)
-
     session_id = init_response.headers.get("Mcp-Session-Id")
 
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("TRUNCATE TABLE pdp_audit RESTART IDENTITY;")
+
 
     response = client.post(
         "/mcp",
@@ -279,11 +297,10 @@ def test_mcp_tool_call_with_decision_denied(client, override_loaded_policy) -> N
                 "arguments": {"document_id": "test_doc_private_1"}
             }
         },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id
-        },
+        headers=mcp_headers(
+            session_id=session_id, 
+            api_key=configured_agent_identity["api_key"]
+        )
     )
 
     assert response.status_code == 200
@@ -310,10 +327,10 @@ def test_mcp_tool_call_with_decision_denied(client, override_loaded_policy) -> N
 
 
 
-def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
+def test_mcp_tool_call_logs_failure_when_post_allow_raises(
+        client, configured_agent_identity ) -> None:
 
     init_response = client.post(test_url, json=test_json, headers=test_headers)
-
     session_id = init_response.headers.get("Mcp-Session-Id")
 
     original_spec = TOOL_SPECS["docs_tool"]
@@ -335,11 +352,10 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
                     "arguments": {"document_id": "test_doc_public_1"},
                 },
             },
-            headers={
-                "Accept": "application/json, text/event-stream",
-                "Content-Type": "application/json",
-                "Mcp-Session-Id": session_id, 
-            },
+            headers=mcp_headers(
+                session_id=session_id, 
+                api_key=configured_agent_identity["api_key"]
+            ),
         )
     finally:
         TOOL_SPECS["docs_tool"] = original_spec
@@ -352,19 +368,17 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(client) -> None:
     
 
 
-def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(client, monkeypatch) -> None:
+def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(
+        client, configured_agent_identity ) -> None:
     
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("TRUNCATE TABLE pdp_audit RESTART IDENTITY;")
 
-    test_agent_id = "test_agent_456"
-    monkeypatch.setattr(get_settings(), "agent_api_key", "test_api_key_456")
-    monkeypatch.setattr(get_settings(), "agent_id", test_agent_id)
 
     init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
-    
+
     response = client.post(
         "/mcp",
         json={
@@ -376,12 +390,10 @@ def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(client, monkeypatch)
                 "arguments": {"document_id": "test_doc_public_1"}
             }
         },
-        headers={
-            "Accept": "application/json, text/event-stream",
-            "Content-Type": "application/json",
-            "Mcp-Session-Id": session_id,
-            "X-Agent-Api-Key": "test_api_key_456"
-        },
+        headers=mcp_headers(
+            session_id=session_id, 
+            api_key=configured_agent_identity["api_key"]
+        )
     )
 
     assert response.status_code == 200
@@ -399,5 +411,49 @@ def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(client, monkeypatch)
             audit_record = cursor.fetchone()
 
     assert audit_record is not None
-    assert audit_record[0] == test_agent_id
-    print(f"Audit record agent_id: {audit_record[0]}, expected: {test_agent_id}")
+    assert audit_record[0] == "test-agent"
+
+
+
+def test_mcp_tool_call_rejects_unresolved_agent_identity(
+        client, configured_agent_identity ) -> None:
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE pdp_audit RESTART IDENTITY;")
+
+    init_response = client.post(test_url, json=test_json, headers=test_headers)
+
+    session_id = init_response.headers.get("Mcp-Session-Id")
+
+    response = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 8,
+            "method": "tools/call",
+            "params": {
+                "name": "docs_tool", 
+                "arguments": {"document_id": "test_doc_public_1"}
+            }
+        },
+        headers=mcp_headers(session_id=session_id, api_key=None) 
+        # No X-Agent-Api-Key header and no meta agent_id provided, 
+        # should result in UNAUTHENTICATED_AGENT_IDENTITY
+    )
+
+    assert response.status_code == 200
+    
+    json_out = response.json()
+    structured = json_out["result"]["structuredContent"]
+    assert structured["status"] == "denied"
+    assert structured["decision"] == "deny"
+    assert structured["rationale"] == ["UNAUTHENTICATED_AGENT_IDENTITY"]
+   
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM pdp_audit;")
+            audit_count = cursor.fetchone()[0]
+
+    assert audit_count == 0, f"Expected no audit records, but found {audit_count}"

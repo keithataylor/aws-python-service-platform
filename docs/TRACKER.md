@@ -141,6 +141,7 @@ The current tests cover:
 - MCP metadata fallback
 - API-key-resolved agent identity persisted in PDP audit rows
 - test DB isolation
+- unresolved agent identity rejected before PDP/tool execution
 
 ## Out of scope for now
 

@@ -33,6 +33,21 @@ def proxy_process_tool_invocation(
         metadata, and status of the processed call.
     """ 
 
+    # For unauthenticated identities, we skip PDP evaluation and directly deny access.
+    if agent_identity.auth_method == "none":
+        app_log_event(
+            event_name="agent_identity_unknown",
+            request_id="unknown",
+            tool_name=tool_name,
+        )
+        return {
+            "tool_name": tool_name,
+            "status": "denied",
+            "decision": "deny",
+            "rationale": ["UNAUTHENTICATED_AGENT_IDENTITY"],
+        }
+    
+
     spec = get_tool_spec(tool_name)
     
     derived_context = spec.pre_pdp(tool_arguments) if spec.pre_pdp else {}   

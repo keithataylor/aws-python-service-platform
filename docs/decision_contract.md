@@ -39,6 +39,7 @@ Important contract points:
 - Raw caller-supplied tool arguments are not directly evaluated by the PDP.
 - Tool-specific pre-PDP handlers validate their derived context before it becomes PDP `decision_context`.
 - For the document read flow, the derived context is validated as `DocumentDecisionContext` and currently contains `document_visibility`.
+- Unauthenticated agent identity is rejected before tool lookup, pre-PDP enrichment, PDP evaluation, PDP audit persistence, or post-allow execution.
 
 ## Policy constraints do not declare a source.
 
@@ -148,4 +149,6 @@ The proxy currently uses `agent_identity.agent_id` for:
 
 Additional identity facts such as `roles`, `tenant_id`, or `auth_method` can later be added to `decision_context` when policy rules require them.
 
+MCP tool execution requires a resolved authenticated agent identity.
 
+If identity resolution returns `auth_method="none"`, the proxy returns a denied tool result before invoking the PDP path.

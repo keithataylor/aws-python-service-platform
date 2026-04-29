@@ -67,3 +67,12 @@ def seed_test_documents(use_test_db) -> None:
             )
 
 
+@pytest.fixture
+def configured_agent_identity(monkeypatch):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "agent_api_key", "test-api-key")
+    monkeypatch.setattr(settings, "agent_id", "test-agent")
+    return {
+        "api_key": "test-api-key",
+        "agent_id": "test-agent",
+    }
