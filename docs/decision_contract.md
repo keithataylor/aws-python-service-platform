@@ -31,13 +31,14 @@ class InvocationDecisionRequest(BaseModel):
 
 Important contract points:
 
-resource is singular.
-decision_context is the PDP decision input.
-decision_context is server-prepared.
-decision_context may include facts derived from tool arguments, runtime state, authentication, configuration, or database lookups.
-Policy constraints evaluate only against decision_context.
-Raw caller-supplied tool arguments are not directly evaluated by the PDP.
-Policy constraints
+- `resource` is singular.
+- `decision_context` is the PDP decision input.
+- `decision_context` is server-prepared.
+- Current document policy uses `decision_context.document_visibility`.
+- Policy constraints evaluate only against `decision_context`.
+- Raw caller-supplied tool arguments are not directly evaluated by the PDP.
+- Tool-specific pre-PDP handlers validate their derived context before it becomes PDP `decision_context`.
+- For the document read flow, the derived context is validated as `DocumentDecisionContext` and currently contains `document_visibility`.
 
 ## Policy constraints do not declare a source.
 
@@ -146,3 +147,5 @@ The proxy currently uses `agent_identity.agent_id` for:
 - runtime logging where agent identity is needed
 
 Additional identity facts such as `roles`, `tenant_id`, or `auth_method` can later be added to `decision_context` when policy rules require them.
+
+

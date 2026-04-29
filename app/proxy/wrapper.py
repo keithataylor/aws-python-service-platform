@@ -37,13 +37,17 @@ def proxy_process_tool_invocation(
     
     derived_context = spec.pre_pdp(tool_arguments) if spec.pre_pdp else {}   
 
+    # Tool-specific pre-PDP handlers return the validated decision_context for this invocation.
+    decision_context = derived_context
+
+
     normalize_request = normalize_tool_invocation(
         agent_id=agent_identity.agent_id,
         server_name=MCP_SERVER_NAME,
         tool_name=spec.tool_name,
         action=spec.invocation_action,
         resource=spec.resource, 
-        decision_context=derived_context
+        decision_context=decision_context
     )
 
     evaluation = pdp_evaluate_agent_action(normalize_request, loaded_policy.document)

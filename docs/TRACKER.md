@@ -74,6 +74,8 @@ The current runtime contract is:
 - `resource` is singular.
 - `rationale` remains `list[str]`.
 - Every PDP decision is persisted as an audit row.
+- Tool-specific pre-PDP handlers validate their derived context before it becomes PDP decision_context.
+- For the document read flow, the derived context is validated as DocumentDecisionContext and currently contains document_visibility.
 
 The fuller contract is documented in:
 

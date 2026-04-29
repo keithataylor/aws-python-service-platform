@@ -2,7 +2,7 @@
 Registry mapping MCP tool names to proxy tool specifications.
 """
 
-from app.proxy.ducument_actions import (
+from app.proxy.document_actions import (
     build_docs_tool_context,
     process_documents_retrieval_request,
     process_list_documents_request,

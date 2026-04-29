@@ -4,7 +4,7 @@ Post-allow document tool actions executed after PDP authorization.
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.proxy.document_repository import (
     get_document_by_id,
@@ -21,9 +21,18 @@ class ListDocumentsArguments(BaseModel):
     query: str = Field(default="", max_length=200)
 
 
+class DocumentDecisionContext(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    document_visibility: str = Field(min_length=1, max_length=50)
+
+    
 def build_docs_tool_context(tool_arguments: dict[str, Any]) -> dict[str, Any]:
     metadata = get_document_metadata(tool_arguments["document_id"])
-    return metadata
+
+    return DocumentDecisionContext(
+        document_visibility=metadata["document_visibility"],
+    ).model_dump()
+    #return metadata
 
 
 def process_documents_retrieval_request(arguments: dict) -> dict[str, Any]:
