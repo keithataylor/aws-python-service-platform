@@ -457,18 +457,15 @@ MCP tool entrypoints resolve caller identity before invoking the proxy.
 
 Current identity resolution flow:
 
-- API key header is checked first.
-- If a configured API key matches, the runtime resolves the configured `agent_id`.
-- If no valid API key identity is resolved, MCP request metadata may provide `agent_id`.
-- If no usable identity source exists, the runtime uses `unknown-agent`.
+- The request must provide `X-Agent-Api-Key`.
+- The API key is compared with the configured `AGENT_API_KEY`.
+- If the key matches, the runtime resolves `AGENT_ID` as the trusted agent identity.
+- Missing or invalid API keys resolve to `auth_method="none"`.
+- `auth_method="none"` is rejected by the proxy before tool lookup, pre-PDP enrichment, PDP evaluation, PDP audit persistence, or post-allow execution.
+- MCP request metadata is not used as an authentication source.
 
-The resolver returns a `ResolvedAgentIdentity` object containing:
+The proxy receives the resolved identity object and uses `agent_identity.agent_id` for:
 
-- `agent_id`
-- `auth_method`
-- optional `tenant_id`
-- optional `roles`
-
-The proxy currently receives `agent_identity.agent_id` as the stable agent identifier for PDP evaluation and audit persistence.
-
-The identity resolver is the intended seam for later JWT, OAuth/OIDC, gateway-injected identity, or other customer-specific authentication methods.
+- PDP invocation request `agent_id`
+- PDP audit event `agent_id`
+- runtime logging where agent identity is needed
