@@ -54,8 +54,11 @@ The current stable slice includes:
   - unit tests
   - integration tests
 - resolved agent identity boundary
-- API-key identity adapter with MCP metadata fallback
+- API-key identity adapter
+- missing or invalid API keys rejected before PDP/tool execution
+- MCP metadata is not used as an authentication source
 - proxy receives `ResolvedAgentIdentity` and uses `agent_identity.agent_id` for PDP/audit
+
 
 ## Current runtime contract
 
@@ -138,7 +141,9 @@ The current tests cover:
 - policy SHA-256 audit persistence
 - resolved agent identity boundary
 - API-key identity adapter
-- MCP metadata fallback
+- valid API key resolves configured agent identity
+- missing/invalid API key resolves to unauthenticated identity
+- unresolved agent identity rejected before PDP/tool execution
 - API-key-resolved agent identity persisted in PDP audit rows
 - test DB isolation
 - unresolved agent identity rejected before PDP/tool execution
@@ -184,6 +189,5 @@ The current stable implementation demonstrates:
 - linted project structure
 - resolved agent identity boundary
 - API-key identity adapter
-- MCP metadata fallback
 
 This is now a credible small backend/platform slice for demonstrating agent-runtime policy enforcement rather than a generic API scaffold.

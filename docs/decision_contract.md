@@ -137,18 +137,28 @@ This keeps caller-supplied tool input explicit and bounded before it is used for
 
 ## Agent identity in the proxy
 
-MCP tool entrypoints resolve caller identity into `ResolvedAgentIdentity`.
+MCP tool execution uses configured API-key identity resolution.
 
-The proxy receives the resolved identity object.
+Current identity flow:
 
-The proxy currently uses `agent_identity.agent_id` for:
+- The request must provide `X-Agent-Api-Key`.
+- The API key is compared with the configured `AGENT_API_KEY`.
+- If the key matches, the runtime resolves `AGENT_ID` as the trusted agent identity.
+- Missing or invalid API keys resolve to `auth_method="none"`.
+- `auth_method="none"` is rejected by the proxy before tool lookup, pre-PDP enrichment, PDP evaluation, PDP audit persistence, or post-allow execution.
+- MCP metadata is not used as an authentication source.
+
+The resolver returns `ResolvedAgentIdentity`, currently containing:
+
+- `agent_id`
+- `auth_method`
+- optional `tenant_id`
+- optional `roles`
+
+The proxy receives the resolved identity object and currently uses `agent_identity.agent_id` for:
 
 - PDP invocation request `agent_id`
 - PDP audit event `agent_id`
 - runtime logging where agent identity is needed
 
 Additional identity facts such as `roles`, `tenant_id`, or `auth_method` can later be added to `decision_context` when policy rules require them.
-
-MCP tool execution requires a resolved authenticated agent identity.
-
-If identity resolution returns `auth_method="none"`, the proxy returns a denied tool result before invoking the PDP path.

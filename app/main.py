@@ -6,8 +6,6 @@ Application assembly for the FastAPI service and mounted FastMCP runtime.
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 from fastmcp import FastMCP
-from fastmcp.dependencies import CurrentContext
-from fastmcp.server.context import Context
 from fastmcp.server.dependencies import CurrentRequest
 from fastmcp.utilities.lifespan import combine_lifespans
 from starlette.requests import Request
@@ -41,16 +39,11 @@ app.include_router(api_v1_router)
 
 
 @mcp.tool(name="list_documents")
-async def list_documents(query: str, 
-                         ctx: Context = CurrentContext(),
-                         request: Request = CurrentRequest()
+async def list_documents(query: str, request: Request = CurrentRequest()
 ) -> dict:
     """List all document titles and summaries matching the query."""
 
-    agent_identity = resolve_agent_identity(
-        request=request, 
-        meta=ctx.request_context.meta
-    )
+    agent_identity = resolve_agent_identity(request=request)
 
     proxy_response = proxy_process_tool_invocation(
         agent_identity = agent_identity,
@@ -63,18 +56,13 @@ async def list_documents(query: str,
 
 
 @mcp.tool(name="docs_tool")
-async def docs_tool(document_id: str, 
-                    ctx: Context = CurrentContext(), 
-                    request: Request = CurrentRequest()
+async def docs_tool(document_id: str, request: Request = CurrentRequest()
 ) -> dict:
     """
     Example tool implementation that normalizes 
     the incoming MCP request and simulates a response.
     """
-    agent_identity = resolve_agent_identity(
-        request=request, 
-        meta=ctx.request_context.meta
-    )
+    agent_identity = resolve_agent_identity(request=request)
 
     proxy_response = proxy_process_tool_invocation(
         agent_identity = agent_identity,
