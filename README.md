@@ -104,6 +104,26 @@ The current runtime contract is intentionally narrow and explicit.
 - Policy constraints evaluate against `decision_context`.
 - The PDP does not evaluate raw caller-supplied tool arguments.
 
+### Agent identity resolution
+
+MCP tool entrypoints resolve caller identity before invoking the proxy.
+
+Current identity resolution flow:
+
+- The request must provide `X-Agent-Api-Key`.
+- The API key is compared with the configured `AGENT_API_KEY`.
+- If the key matches, the runtime resolves `AGENT_ID` as the trusted agent identity.
+- Missing or invalid API keys resolve to `auth_method="none"`.
+- `auth_method="none"` is rejected by the proxy before tool lookup, pre-PDP enrichment, PDP evaluation, PDP audit persistence, or post-allow execution.
+- MCP request metadata is not used as an authentication source.
+
+The proxy receives the resolved identity object and uses `agent_identity.agent_id` for:
+
+- PDP invocation request `agent_id`
+- PDP audit event `agent_id`
+- runtime logging where agent identity is needed
+
+
 ### Audit contract
 
 - PDP audit persistence writes to the `pdp_audit` table as the source of truth.
@@ -236,6 +256,8 @@ DB_NAME=app_db
 DB_USER=app_user
 DB_PASSWORD=app_password
 TEST_DB_NAME=test_db
+AGENT_API_KEY=local-dev-agent-key
+AGENT_ID=local-dev-agent
 ```
 
 `.env` is used locally at runtime.
@@ -368,6 +390,10 @@ The current test suite covers:
 - PDP audit repository/service persistence
 - policy SHA-256 audit persistence
 - test DB isolation
+- typed document decision context validation
+- API-key identity resolution
+- unresolved agent identity rejection before PDP/tool execution
+- API-key-resolved agent identity persisted in PDP audit rows
 
 Important testing distinction:
 
@@ -451,21 +477,3 @@ The current stable slice is:
 - structured runtime logging
 - passing local and CI tests
 
-## Agent identity resolution
-
-MCP tool entrypoints resolve caller identity before invoking the proxy.
-
-Current identity resolution flow:
-
-- The request must provide `X-Agent-Api-Key`.
-- The API key is compared with the configured `AGENT_API_KEY`.
-- If the key matches, the runtime resolves `AGENT_ID` as the trusted agent identity.
-- Missing or invalid API keys resolve to `auth_method="none"`.
-- `auth_method="none"` is rejected by the proxy before tool lookup, pre-PDP enrichment, PDP evaluation, PDP audit persistence, or post-allow execution.
-- MCP request metadata is not used as an authentication source.
-
-The proxy receives the resolved identity object and uses `agent_identity.agent_id` for:
-
-- PDP invocation request `agent_id`
-- PDP audit event `agent_id`
-- runtime logging where agent identity is needed
