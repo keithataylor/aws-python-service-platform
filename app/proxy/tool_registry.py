@@ -29,13 +29,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
 
 def get_tool_spec(tool_name: str) -> ToolSpec:
     """
-    Retrieves the ToolSpec for the given tool name.
-    Args:
-        tool_name (str): The name of the tool for which to retrieve the specification.
-    Returns:
-        ToolSpec: The specification of the requested tool.
-    Raises:
-        ValueError: If the tool specification is not found.
+    Return the registered ToolSpec for a tool name.
     """
     try:
         return TOOL_SPECS[tool_name]

@@ -1,5 +1,5 @@
 """
-Proxy orchestration for MCP tool invocations and PDP enforcement.
+Process an MCP tool invocation through identity, PDP, audit, and execution.
 """
 
 from datetime import datetime, timezone
@@ -17,9 +17,11 @@ from app.schemas.pdp_audit import PDPAuditEvent
 
 
 def proxy_process_tool_invocation(
-        agent_identity: ResolvedAgentIdentity, tool_name: str, 
-        tool_arguments: dict, loaded_policy: LoadedPolicy
-        ) -> dict[str, Any]:
+    agent_identity: ResolvedAgentIdentity,
+    tool_name: str,
+    tool_arguments: dict[str, Any],
+    loaded_policy: LoadedPolicy,
+) -> dict[str, Any]:
     """
     Process and route incoming MCP tool calls to the appropriate handlers 
     based on the tool name and arguments.
@@ -50,11 +52,7 @@ def proxy_process_tool_invocation(
 
     spec = get_tool_spec(tool_name)
     
-    derived_context = spec.pre_pdp(tool_arguments) if spec.pre_pdp else {}   
-
-    # Tool-specific pre-PDP handlers return the validated decision_context for this invocation.
-    decision_context = derived_context
-
+    derived_context = spec.pre_pdp(tool_arguments) if spec.pre_pdp else {}  
 
     normalize_request = normalize_tool_invocation(
         agent_id=agent_identity.agent_id,
@@ -62,7 +60,7 @@ def proxy_process_tool_invocation(
         tool_name=spec.tool_name,
         action=spec.invocation_action,
         resource=spec.resource, 
-        decision_context=decision_context
+        decision_context=derived_context
     )
 
     evaluation = pdp_evaluate_agent_action(normalize_request, loaded_policy.document)
@@ -79,7 +77,7 @@ def proxy_process_tool_invocation(
             rationale=evaluation.rationale,
             policy_version=loaded_policy.document.version,
             policy_sha256=loaded_policy.policy_sha256,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
     )
     
@@ -93,11 +91,9 @@ def proxy_process_tool_invocation(
         )
         return {
             "tool_name": normalize_request.tool_name,
-            "arguments": tool_arguments,
-            "meta": spec, 
             "status": "denied",
             "decision": evaluation.decision,
-            "rationale": evaluation.rationale
+            "rationale": evaluation.rationale,
         }
 
     if spec.post_allow is None:
@@ -117,7 +113,7 @@ def proxy_process_tool_invocation(
     app_log_event(
         event_name="tool_invocation_executed",
         request_id=normalize_request.request_id,
-        tool_name=normalize_request.tool_name
+        tool_name=normalize_request.tool_name,
     )
         
     return result

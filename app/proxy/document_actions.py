@@ -1,5 +1,5 @@
 """
-Post-allow document tool actions executed after PDP authorization.
+Document tool argument validation, context derivation, and post-allow actions.
 """
 
 from typing import Any
@@ -27,32 +27,31 @@ class DocumentDecisionContext(BaseModel):
 
     
 def build_docs_tool_context(tool_arguments: dict[str, Any]) -> dict[str, Any]:
-    metadata = get_document_metadata(tool_arguments["document_id"])
-
+    validated_args = DocsToolArguments.model_validate(tool_arguments)
+    metadata = get_document_metadata(validated_args.document_id)
     return DocumentDecisionContext(
         document_visibility=metadata["document_visibility"],
     ).model_dump()
-    #return metadata
 
 
-def process_documents_retrieval_request(arguments: dict) -> dict[str, Any]:
+
+def process_documents_retrieval_request(arguments: dict[str, Any]) -> dict[str, Any]:
     validated_args = DocsToolArguments.model_validate(arguments)
     document_id = validated_args.document_id
     results = get_document_by_id(document_id)
     return {
         "results": results,
         "total_matches": 1 if results else 0,
-        "returned_count": 1 if results else 0
+        "returned_count": 1 if results else 0,
     }
 
-    
-def process_list_documents_request(arguments: dict) -> dict[str, Any]:
+
+def process_list_documents_request(arguments: dict[str, Any]) -> dict[str, Any]:
     validated_args = ListDocumentsArguments.model_validate(arguments)
     query = validated_args.query.strip()
-
     results = search_documents(query)
     return {
         "results": results,
         "total_matches": len(results),
-        "returned_count": len(results)
+        "returned_count": len(results),
     }
