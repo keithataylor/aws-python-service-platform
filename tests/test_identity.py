@@ -6,8 +6,7 @@ from app.proxy.identity import resolve_agent_identity
 pytestmark = pytest.mark.unit
 
 
-def test_resolve_agent_identity_returns_authenticated_identity_for_resolved_api_key(monkeypatch):
-    # valid API key resolves configured agent_id
+def test_resolve_agent_identity_returns_authenticated_identity_for_resolved_api_key(monkeypatch) -> None:
     request = Request(
         scope={
             "type": "http", 
@@ -26,8 +25,7 @@ def test_resolve_agent_identity_returns_authenticated_identity_for_resolved_api_
     assert result.auth_method == "api_key"
 
 
-def test_resolve_agent_identity_returns_unknown_identity_for_invalid_api_key():
-    # invalid API key falls back to unknown-agent
+def test_resolve_agent_identity_returns_unknown_identity_for_invalid_api_key() -> None:
     request = Request(
         scope={
             "type": "http", 
@@ -42,7 +40,6 @@ def test_resolve_agent_identity_returns_unknown_identity_for_invalid_api_key():
 
 
 def test_resolve_agent_identity_no_api_key() -> None:
-    # no API key returns unknown-agent
     request = Request(
         scope={
             "type": "http", 

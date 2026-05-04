@@ -30,6 +30,7 @@ jobs:
       TEST_DB_NAME: test_db
       DB_USER: app_user
       DB_PASSWORD: app_password
+      AGENT_CREDENTIAL_HASH_SECRET: local-dev-agent-credential-hash-secret
 
     steps:
       - name: Check out repository
