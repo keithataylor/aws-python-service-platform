@@ -6,7 +6,9 @@ from app.proxy.identity import resolve_agent_identity
 pytestmark = pytest.mark.unit
 
 
-def test_resolve_agent_identity_returns_authenticated_identity_for_resolved_api_key(monkeypatch) -> None:
+def test_resolve_agent_identity_returns_authenticated_identity_for_resolved_api_key(
+    monkeypatch
+) -> None:
     request = Request(
         scope={
             "type": "http", 
