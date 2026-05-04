@@ -3,6 +3,8 @@
 from fastapi import Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.auth.agent_credentials_repository import get_active_agent_id_for_api_key_hash
+from app.auth.credential_hashing import hash_agent_api_key
 from app.core.config import get_settings
 
 
@@ -16,17 +18,29 @@ class ResolvedAgentIdentity(BaseModel):
 
 
 def resolve_agent_identity(*, request: Request) -> ResolvedAgentIdentity:
-    """Resolve agent identity from the configured API-key request header."""
+    """Resolve agent identity from a registered API-key credential."""
     settings = get_settings()
     api_key = request.headers.get("X-Agent-Api-Key")
 
-    if not settings.agent_api_key or api_key != settings.agent_api_key:
+    if api_key is None:
+        return ResolvedAgentIdentity(
+            agent_id="unknown-agent",
+            auth_method="none",
+        )
+
+    api_key_hash = hash_agent_api_key(
+        api_key=api_key,
+        secret=settings.agent_credential_hash_secret,
+    )
+    agent_id = get_active_agent_id_for_api_key_hash(api_key_hash)
+
+    if agent_id is None:
         return ResolvedAgentIdentity(
             agent_id="unknown-agent",
             auth_method="none",
         )
 
     return ResolvedAgentIdentity(
-        agent_id=settings.agent_id,
+        agent_id=agent_id,
         auth_method="api_key",
     )

@@ -35,14 +35,18 @@ The PDP evaluates a server-prepared `decision_context`, not raw MCP JSON and not
 
 ## Agent identity resolution
 
-MCP tool execution uses configured API-key identity resolution.
+MCP tool execution uses DB-backed API-key identity resolution.
 
 Current identity flow:
 
 - The request must provide `X-Agent-Api-Key`.
-- The API key is compared with the configured `AGENT_API_KEY`.
-- If the key matches, the runtime resolves `AGENT_ID` as the trusted agent identity.
-- Missing or invalid API keys resolve to `auth_method="none"`.
+- The raw API key is never stored.
+- The presented API key is HMAC-SHA256 hashed using `AGENT_CREDENTIAL_HASH_SECRET`.
+- The resulting hash is looked up against `agent_api_credentials.api_key_hash`.
+- The credential must have `status = 'active'`.
+- The owning registered agent must have `status = 'active'`.
+- If both checks pass, the runtime resolves the registered agent's `agent_id` as the trusted agent identity.
+- Missing, invalid, revoked, or disabled credentials resolve to `auth_method="none"`.
 - `auth_method="none"` is rejected by the proxy before:
   - tool lookup
   - pre-PDP enrichment
@@ -63,6 +67,16 @@ The proxy receives the resolved identity object and currently uses `agent_identi
 - `InvocationDecisionRequest.agent_id`
 - PDP audit event `agent_id`
 - runtime logging where agent identity is needed
+
+Credential implementation details are not passed into the PDP. The PDP does not receive:
+
+- raw API keys
+- API-key hashes
+- credential IDs
+- API-key prefixes
+- credential status values
+
+`policy.yaml` authorizes the resolved identity. It may match on `agent_id`, but it should not contain or evaluate credential material.
 
 Additional identity facts such as `roles`, `tenant_id`, or `auth_method` should only be added to `decision_context` when policy rules actually need to evaluate them.
 

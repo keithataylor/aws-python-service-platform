@@ -109,7 +109,7 @@ def test_mcp_returns_tools_list(client) -> None:
 
 
 def test_list_documents_with_query_param_returns_document(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
 
     init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
@@ -127,7 +127,7 @@ def test_list_documents_with_query_param_returns_document(
         },
         headers=mcp_headers(
             session_id=session_id, 
-            api_key=configured_agent_identity["api_key"]
+            api_key=resolved_agent_identity["api_key"]
         )
     )
 
@@ -149,7 +149,7 @@ def test_list_documents_with_query_param_returns_document(
 
 
 def test_list_documents_with_empty_query_returns_all_public_documents(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
   
     init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
@@ -167,7 +167,7 @@ def test_list_documents_with_empty_query_returns_all_public_documents(
         },
         headers=mcp_headers(
             session_id=session_id, 
-            api_key=configured_agent_identity["api_key"]
+            api_key=resolved_agent_identity["api_key"]
         )
     )
 
@@ -190,7 +190,7 @@ def test_list_documents_with_empty_query_returns_all_public_documents(
 
 
 def test_docs_tool_with_document_id_returns_correct_document(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
     
     init_response = client.post(test_url, json=test_json, headers=test_headers)
 
@@ -209,7 +209,7 @@ def test_docs_tool_with_document_id_returns_correct_document(
         },
         headers=mcp_headers(
             session_id=session_id, 
-            api_key=configured_agent_identity["api_key"]
+            api_key=resolved_agent_identity["api_key"]
         )
     )
 
@@ -224,7 +224,7 @@ def test_docs_tool_with_document_id_returns_correct_document(
 
 
 def test_mcp_tool_call_and_audit_record(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
     
     init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
@@ -246,7 +246,7 @@ def test_mcp_tool_call_and_audit_record(
         },
         headers=mcp_headers(
             session_id=session_id, 
-            api_key=configured_agent_identity["api_key"]
+            api_key=resolved_agent_identity["api_key"]
         )
     )
 
@@ -276,7 +276,7 @@ def test_mcp_tool_call_and_audit_record(
     
 
 def test_mcp_tool_call_with_decision_denied(
-    client, override_loaded_policy, configured_agent_identity ) -> None:
+    client, override_loaded_policy, resolved_agent_identity ) -> None:
     
     init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
@@ -299,7 +299,7 @@ def test_mcp_tool_call_with_decision_denied(
         },
         headers=mcp_headers(
             session_id=session_id, 
-            api_key=configured_agent_identity["api_key"]
+            api_key=resolved_agent_identity["api_key"]
         )
     )
 
@@ -328,7 +328,7 @@ def test_mcp_tool_call_with_decision_denied(
 
 
 def test_mcp_tool_call_logs_failure_when_post_allow_raises(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
 
     init_response = client.post(test_url, json=test_json, headers=test_headers)
     session_id = init_response.headers.get("Mcp-Session-Id")
@@ -354,7 +354,7 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(
             },
             headers=mcp_headers(
                 session_id=session_id, 
-                api_key=configured_agent_identity["api_key"]
+                api_key=resolved_agent_identity["api_key"]
             ),
         )
     finally:
@@ -369,7 +369,7 @@ def test_mcp_tool_call_logs_failure_when_post_allow_raises(
 
 
 def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
     
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
@@ -392,7 +392,7 @@ def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(
         },
         headers=mcp_headers(
             session_id=session_id, 
-            api_key=configured_agent_identity["api_key"]
+            api_key=resolved_agent_identity["api_key"]
         )
     )
 
@@ -416,7 +416,7 @@ def test_mcp_tool_call_uses_api_key_agent_identity_in_audit(
 
 
 def test_mcp_tool_call_rejects_unresolved_agent_identity(
-        client, configured_agent_identity ) -> None:
+        client, resolved_agent_identity ) -> None:
 
     with get_db_connection() as conn:
         with conn.cursor() as cursor:

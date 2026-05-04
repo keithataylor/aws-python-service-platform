@@ -68,10 +68,20 @@ def seed_test_documents(use_test_db) -> None:
 
 
 @pytest.fixture
-def configured_agent_identity(monkeypatch):
+def resolved_agent_identity(monkeypatch):
     settings = get_settings()
-    monkeypatch.setattr(settings, "agent_api_key", "test-api-key")
-    monkeypatch.setattr(settings, "agent_id", "test-agent")
+
+    monkeypatch.setattr(
+        settings,
+        "agent_credential_hash_secret",
+        "test-agent-credential-hash-secret-value",
+    )
+
+    monkeypatch.setattr(
+        "app.proxy.identity.get_active_agent_id_for_api_key_hash",
+        lambda api_key_hash: "test-agent",
+    )
+
     return {
         "api_key": "test-api-key",
         "agent_id": "test-agent",

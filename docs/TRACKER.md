@@ -54,8 +54,10 @@ The current stable slice includes:
   - unit tests
   - integration tests
 - resolved agent identity boundary
-- API-key identity adapter
-- missing or invalid API keys rejected before PDP/tool execution
+- DB-backed registered-agent credential lookup
+- HMAC-SHA256 API-key hashing using `AGENT_CREDENTIAL_HASH_SECRET`
+- raw API keys are not stored
+- missing, invalid, revoked, or disabled credentials rejected before PDP/tool execution
 - MCP metadata is not used as an authentication source
 - proxy receives `ResolvedAgentIdentity` and uses `agent_identity.agent_id` for PDP/audit
 
@@ -104,18 +106,25 @@ The current PostgreSQL-backed flow includes:
 
 - `documents` table for document search/read examples
 - `pdp_audit` table for PDP decision audit events
+- `registered_agents` table for stable agent identities
+- `agent_api_credentials` table for hashed API-key credentials
 
 Current migration chain:
 
 - `001_create_documents_table.sql`
 - `002_seed_documents.sql`
 - `003_create_pdp_audit_table.sql`
+- `004_create_registered_agent_credentials.sql`
 
 Current schema decisions:
 
 - `pdp_audit.resource` is `TEXT NOT NULL`
 - `pdp_audit.rationale` is `TEXT[] NOT NULL`
 - `pdp_audit.policy_sha256` is included in the base audit migration
+- `registered_agents.status` is constrained to `active` or `disabled`
+- `agent_api_credentials.status` is constrained to `active` or `revoked`
+- `agent_api_credentials.api_key_hash` is unique
+- `agent_api_credentials.agent_id` references `registered_agents.agent_id` with `ON DELETE RESTRICT`
 
 ## Current test coverage
 
@@ -140,12 +149,15 @@ The current tests cover:
 - PDP audit row persistence
 - policy SHA-256 audit persistence
 - resolved agent identity boundary
-- API-key identity adapter
-- valid API key resolves configured agent identity
+- DB-backed API-key identity adapter
+- API-key hashing is deterministic
+- API-key hash changes when the API key or HMAC secret changes
+- active credential for active registered agent resolves agent identity
+- revoked credential does not resolve agent identity
+- active credential for disabled registered agent does not resolve agent identity
 - missing/invalid API key resolves to unauthenticated identity
 - unresolved agent identity rejected before PDP/tool execution
 - API-key-resolved agent identity persisted in PDP audit rows
-- test DB isolation
 
 ## Out of scope for now
 
@@ -187,6 +199,7 @@ The current stable implementation demonstrates:
 - local and CI test coverage
 - linted project structure
 - resolved agent identity boundary
-- API-key identity adapter
+- DB-backed registered-agent credential lookup
+- HMAC-hashed API-key identity adapter
 
 This is now a credible small backend/platform slice for demonstrating agent-runtime policy enforcement rather than a generic API scaffold.
