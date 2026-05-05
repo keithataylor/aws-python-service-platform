@@ -8,7 +8,9 @@ from app.db.connection import get_db_connection
 pytestmark = pytest.mark.integration
 
 
-def test_get_active_agent_id_for_api_key_hash_returns_agent_id() -> None:
+def test_get_active_agent_id_for_api_key_hash_returns_agent_id(
+    use_test_db,
+) -> None:
     api_key_hash = "test-api-key-hash"
     agent_id = "test-agent"
 
@@ -57,7 +59,9 @@ def test_get_active_agent_id_for_api_key_hash_returns_agent_id() -> None:
 
 
 
-def test_get_active_agent_id_for_api_key_hash_returns_none_for_revoked_credential() -> None:
+def test_get_active_agent_id_for_api_key_hash_returns_none_for_revoked_credential(
+    use_test_db,
+) -> None:
     api_key_hash = "revoked-api-key-hash"
     agent_id = "test-agent"
 
@@ -106,7 +110,9 @@ def test_get_active_agent_id_for_api_key_hash_returns_none_for_revoked_credentia
 
 
 
-def test_get_active_agent_id_for_api_key_hash_returns_none_for_disabled_agent() -> None:
+def test_get_active_agent_id_for_api_key_hash_returns_none_for_disabled_agent(
+    use_test_db,
+) -> None:
     api_key_hash = "disabled-agent-api-key-hash"
     agent_id = "disabled-test-agent"
 

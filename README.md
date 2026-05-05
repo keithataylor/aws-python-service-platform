@@ -453,6 +453,28 @@ docker compose exec -T postgres psql -U app_user -d app_db -c "SELECT credential
 docker compose exec -T postgres psql -U app_user -d app_db -c "SELECT request_id, tool_name, resource, decision, rationale, policy_sha256, created_at FROM pdp_audit ORDER BY created_at DESC LIMIT 10;"
 ```
 
+### 7. Create/update the local dev agent credential
+
+When running the service locally outside the test suite, tool calls need an active registered agent credential in the application database.
+
+From the project root:
+
+```powershell
+python scripts/create-local-agent-credential.py
+```
+
+This creates or updates the local development agent credential in `app_db`.
+
+The script prints the raw local API key to use as:
+
+```text
+X-Agent-Api-Key: local-dev-agent-key
+```
+
+The raw API key is not stored in PostgreSQL. The script stores only the HMAC-SHA256 hash in `agent_api_credentials.api_key_hash`.
+
+The pytest suite does not depend on this local credential. Tests use the isolated test database or monkeypatched resolver behaviour.
+
 ## Database configuration
 
 Database connection settings are read from environment-based settings in `app/core/config.py`.

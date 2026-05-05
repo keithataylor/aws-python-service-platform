@@ -47,6 +47,7 @@ The current stable slice includes:
 - dedicated PDP audit logger
 - local Docker Compose PostgreSQL workflow
 - rerunnable SQL migrations
+- local dev agent credential helper for non-test MCP calls via `scripts/create-local-agent-credential.py`
 - isolated test database workflow
 - marker-based unit and integration tests
 - GitHub Actions CI running:
