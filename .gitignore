@@ -1,9 +1,16 @@
 __pycache__/
 *.py[cod]
 .env
+.env.docker
 .vscode/
 # Ignore test files
 .pytest_cache/
 .coverage
 htmlcov/
 venv/
+# Terraform
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/*.tfvars
+!**/*.tfvars.example

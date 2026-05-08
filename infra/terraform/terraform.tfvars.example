@@ -1,0 +1,5 @@
+aws_region  = "eu-west-2"
+project_name = "aws-python-service-platform"
+environment  = "dev"
+
+agent_credential_hash_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:example/agent-credential-hash-secret"
