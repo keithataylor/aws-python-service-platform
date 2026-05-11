@@ -77,3 +77,13 @@ resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
   from_port                    = 5432
   to_port                      = 5432
 }
+
+resource "aws_vpc_security_group_egress_rule" "app_to_https_internet" {
+  security_group_id = aws_security_group.app.id
+  description       = "Allow app tasks to reach AWS service endpoints for ECR, Secrets Manager, and CloudWatch Logs."
+
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}

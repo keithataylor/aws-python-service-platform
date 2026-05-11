@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     db_name: str = Field(validation_alias="DB_NAME")
     db_user: str = Field(validation_alias="DB_USER")
     db_password: str = Field(validation_alias="DB_PASSWORD")
-    test_db_name: str = Field(validation_alias="TEST_DB_NAME")
+    test_db_name: str = Field(default="test_db", validation_alias="TEST_DB_NAME")
 
     agent_credential_hash_secret: str = Field(
         min_length=32, 
