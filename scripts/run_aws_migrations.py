@@ -2,7 +2,6 @@ from pathlib import Path
 
 from app.db.connection import get_db_connection
 
-
 MIGRATION_FILES = [
     "001_create_documents_table.sql",
     "002_seed_documents.sql",
