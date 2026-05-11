@@ -1,4 +1,4 @@
-CREATE TABLE registered_agents (
+CREATE TABLE IF NOT EXISTS registered_agents (
     agent_id TEXT PRIMARY KEY,
     display_name TEXT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('active', 'disabled')),
@@ -6,7 +6,7 @@ CREATE TABLE registered_agents (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE agent_api_credentials (
+CREATE TABLE IF NOT EXISTS agent_api_credentials (
     credential_id TEXT PRIMARY KEY,
     agent_id TEXT NOT NULL REFERENCES registered_agents(agent_id) ON DELETE RESTRICT,
     api_key_hash TEXT NOT NULL UNIQUE,
@@ -17,5 +17,5 @@ CREATE TABLE agent_api_credentials (
     last_used_at TIMESTAMPTZ NULL
 );
 
-CREATE INDEX idx_agent_api_credentials_agent_id
+CREATE INDEX IF NOT EXISTS idx_agent_api_credentials_agent_id
     ON agent_api_credentials(agent_id);
