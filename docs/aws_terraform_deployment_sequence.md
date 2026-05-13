@@ -674,7 +674,7 @@ Important distinction:
 
 ---
 
-## 18. Current completed AWS scaffold
+## 18. Current completed AWS vertical slice
 
 Completed:
 
@@ -696,9 +696,6 @@ Completed:
 - RDS-managed DB secret
 - manually-created agent credential hash secret
 - Terraform variable for existing agent credential hash secret ARN
-
-Not yet completed:
-
 - IAM execution role
 - IAM task role
 - CloudWatch log group
@@ -706,13 +703,49 @@ Not yet completed:
 - ECS service
 - ECS-to-target-group registration
 - ECS secret injection
-- database migrations/seeding on RDS
 - deployed `/health` check through ALB
-- manual MCP smoke test against AWS runtime
+- one-off ECS migration task against private RDS
+- AWS dev registered-agent credential seeding task
+- manual AWS MCP smoke test helper
+
+The deployed AWS path now works end-to-end:
+
+- ALB forwards public HTTP traffic to ECS/Fargate.
+- ECS runs the FastAPI/FastMCP app container.
+- The app receives database and credential-secret configuration from ECS task definition environment/secrets.
+- The app connects to RDS PostgreSQL.
+- RDS migrations and seed data have been applied.
+- A dev registered-agent credential has been seeded into RDS.
+- MCP `docs_tool` smoke tests work through the deployed `/mcp/` endpoint.
+
+Verified smoke-test outcomes:
+
+- `doc1` is public and returns the document body.
+- `doc2` is private and returns a denied MCP result with `DEFAULT_DENY`.
+
+Current intentional dev limitation:
+
+- ECS app tasks currently run in public subnets with `assignPublicIp=ENABLED`.
+- This avoids adding NAT Gateway or VPC endpoints during the first runnable AWS vertical slice.
+- Inbound access is still controlled through security groups:
+  - Internet -> ALB on port `80`
+  - ALB -> ECS app task on port `8000`
+  - ECS app task -> RDS on port `5432`
+
+Deferred production hardening:
+
+- HTTPS listener with ACM certificate
+- optional HTTP `80 -> 443` redirect
+- private app subnets without public task IPs
+- NAT Gateway or VPC endpoints
+- immutable image tags instead of `latest`
+- Terraform remote state
+- production credential registry/admin process
+- migration version table
 
 ---
 
-## 19. Key runtime mapping still to implement
+## 19. Implemented AWS runtime mapping
 
 Local Docker Compose mapping:
 
@@ -721,13 +754,16 @@ Local Docker Compose mapping:
 - app container receives environment variables from `.env.docker`
 - Postgres container receives `POSTGRES_*` initialization variables
 
-AWS mapping still to implement:
+AWS mapping now implemented:
 
 - ECS task definition supplies app environment variables.
 - ECS task definition injects secret values from Secrets Manager.
 - RDS supplies the database endpoint.
-- ECS service runs the task inside private app subnets.
+- ECS service keeps the app task running.
 - ECS registers Fargate task IPs with the ALB target group.
+- ALB forwards public traffic to healthy ECS app tasks.
+- CloudWatch receives app logs.
+- One-off ECS tasks run operational scripts inside the same AWS runtime boundary.
 
 Equivalent app contract:
 
@@ -738,7 +774,7 @@ Equivalent app contract:
 - `DB_PASSWORD`
 - `AGENT_CREDENTIAL_HASH_SECRET`
 
-The application settings code should continue reading the same variable names. The deployment layer supplies them differently.
+The application settings code continues reading the same variable names. The deployment layer supplies them differently.
 
 ---
 
@@ -763,13 +799,13 @@ Local database initialization:
 
 AWS application configuration:
 
-- future ECS task definition
+- ECS task definition
   - `DB_HOST` from `aws_db_instance.app.address`
   - `DB_PORT=5432`
   - `DB_NAME=app_db`
   - `DB_USER=app_user`
-  - `DB_PASSWORD` injected from RDS-managed Secrets Manager secret
-  - `AGENT_CREDENTIAL_HASH_SECRET` injected from existing manually-created Secrets Manager secret
+  - `DB_PASSWORD` injected from the RDS-managed Secrets Manager secret
+  - `AGENT_CREDENTIAL_HASH_SECRET` injected from the existing manually-created Secrets Manager secret
 
 Important distinction:
 
@@ -777,6 +813,29 @@ Important distinction:
 - `DB_*` variables are for the FastAPI app.
 - In AWS, RDS replaces the local Postgres Docker container.
 - ECS task-definition environment and secrets replace `.env.docker`.
+
+Operational helper scripts now used for AWS:
+
+- `scripts/run-aws-migrations-task.ps1`
+  - starts a one-off ECS/Fargate task
+  - runs `scripts/run_aws_migrations.py`
+  - applies SQL migrations against private RDS
+
+- `scripts/register-aws-dev-agent-task.ps1`
+  - starts a one-off ECS/Fargate task
+  - runs `scripts/register_aws_dev_agent.py`
+  - creates or rotates the AWS dev registered-agent credential
+  - prints the raw dev API key once to CloudWatch logs
+
+- `scripts/smoke-aws-docs-tool.ps1`
+  - performs the MCP initialize/session flow
+  - calls `docs_tool` through the deployed ALB `/mcp/` endpoint
+  - accepts `-DocumentId` so both allow and deny paths can be checked
+
+Example smoke checks:
+
+- `doc1` should return a successful document result.
+- `doc2` should return a denied result with `DEFAULT_DENY`.
 
 ---
 
