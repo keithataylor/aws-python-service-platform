@@ -544,6 +544,8 @@ Credible next improvements include:
 - migration version tracking
 - production-grade registered-agent credential registration and rotation workflow
 - CI/CD deployment workflow
+- role-based Terraform access using IAM Identity Center / SSO temporary credentials
+- GitHub Actions OIDC deployment role for ECS application delivery
 - clearer operator documentation for AWS runbooks
 
 The project intentionally favours a small, complete, auditable runtime slice over broad framework expansion.
@@ -560,3 +562,4 @@ Current status:
 - AWS RDS migrations run through one-off ECS tasks
 - AWS dev registered-agent credential seeding/rotation works
 - deployed MCP allow and deny paths have been smoke-tested
+- IAM Identity Center admin access is configured for normal AWS console work

@@ -80,6 +80,7 @@ The current stable implementation includes:
   - RDS PostgreSQL
   - Secrets Manager
   - IAM execution/task roles
+  - IAM Identity Center admin access is configured for normal AWS console work
   - CloudWatch Logs
 - one-off ECS task path for RDS migrations
 - one-off ECS task path for AWS dev registered-agent credential seeding/rotation
@@ -385,6 +386,8 @@ Good next candidates:
 - add CI/CD deployment workflow after the manual AWS path is stable
 - keep migration scripts linear and easy to reason about
 - avoid speculative wrapper/ToolSpec tests unless a real uncovered failure mode is identified
+- role-based Terraform access using IAM Identity Center / SSO temporary credentials
+- GitHub Actions OIDC deployment role for ECS application delivery
 
 Avoid adding new infrastructure or abstractions unless they clarify, secure, or harden the current ECS/RDS/proxy/PDP boundary.
 
