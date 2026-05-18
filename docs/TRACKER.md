@@ -251,6 +251,11 @@ Verified AWS checks:
 - AWS dev registered-agent credential seeding/rotation runs successfully from a one-off ECS task.
 - Deployed `docs_tool` returns `doc1` successfully.
 - Deployed `docs_tool` denies `doc2` with `DEFAULT_DENY`.
+- Manual GitHub Actions CD deploys the app to ECS using GitHub OIDC.
+- The CD workflow pushes Docker images to ECR using both `latest` and immutable Git commit SHA tags.
+- The ECS service is updated to a new task definition revision during CD.
+- The deployed ECS task definition uses the Git commit SHA image tag, not `latest`.
+- The CD workflow waits for ECS service stability and checks `/health` after deployment.
 
 Current intentional AWS development limitation:
 
@@ -383,11 +388,10 @@ Good next candidates:
 - add Terraform remote state
 - add migration version tracking if migration reruns become harder to reason about
 - formalize production-style registered-agent credential registration and rotation
-- add CI/CD deployment workflow after the manual AWS path is stable
+- refine the manual CD workflow with environment approvals, rollback notes, and fuller post-deploy smoke checks
 - keep migration scripts linear and easy to reason about
 - avoid speculative wrapper/ToolSpec tests unless a real uncovered failure mode is identified
 - role-based Terraform access using IAM Identity Center / SSO temporary credentials
-- GitHub Actions OIDC deployment role for ECS application delivery
 
 Avoid adding new infrastructure or abstractions unless they clarify, secure, or harden the current ECS/RDS/proxy/PDP boundary.
 

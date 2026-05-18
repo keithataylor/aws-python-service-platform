@@ -543,12 +543,17 @@ Credible next improvements include:
 - Terraform remote state backend
 - migration version tracking
 - production-grade registered-agent credential registration and rotation workflow
-- CI/CD deployment workflow
 - role-based Terraform access using IAM Identity Center / SSO temporary credentials
-- GitHub Actions OIDC deployment role for ECS application delivery
+- production deployment refinements such as environment approvals, rollback notes, and fuller post-deploy smoke checks
 - clearer operator documentation for AWS runbooks
 
 The project intentionally favours a small, complete, auditable runtime slice over broad framework expansion.
+
+## Licence
+
+This repository is publicly visible for portfolio review and technical evaluation only.
+
+It is not an open-source project. No licence is granted for reuse, redistribution, hosting, or commercial/production use without prior written permission.
 
 ## Status
 
@@ -563,3 +568,5 @@ Current status:
 - AWS dev registered-agent credential seeding/rotation works
 - deployed MCP allow and deny paths have been smoke-tested
 - IAM Identity Center admin access is configured for normal AWS console work
+- manual GitHub Actions CD is implemented using OIDC, ECR image push, ECS task definition revision deployment, ECS service rollout, and `/health` smoke check
+- deployed ECS task definitions now use immutable Git commit SHA image tags rather than relying on `latest`
