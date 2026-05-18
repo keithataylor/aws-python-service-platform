@@ -45,3 +45,8 @@ output "app_security_group_id" {
   description = "Security group ID used by the ECS/Fargate app task."
   value       = aws_security_group.app.id
 }
+
+output "github_actions_ecs_deploy_role_arn" {
+  description = "IAM role ARN assumed by GitHub Actions via OIDC for ECS deployments."
+  value       = aws_iam_role.github_actions_ecs_deploy_role.arn
+}
