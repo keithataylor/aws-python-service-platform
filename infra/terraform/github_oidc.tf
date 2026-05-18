@@ -40,7 +40,7 @@ data "aws_iam_policy_document" "github_actions_deploy_trust_policy" {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:keithataylor/aws-python-service-platform:ref:refs/heads/main",
+        "repo:keithataylor/aws-python-service-platform:environment:dev",
       ]
     }
   }
