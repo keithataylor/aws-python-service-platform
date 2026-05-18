@@ -535,7 +535,7 @@ Planned hardening should remain tied to production-relevant gaps.
 
 Credible next improvements include:
 
-- immutable image tags instead of deploying `latest`
+- extend immutable image tagging consistently across manual and Terraform-driven deployment paths
 - HTTPS listener with ACM certificate
 - optional HTTP-to-HTTPS redirect
 - private ECS task networking without public task IPs

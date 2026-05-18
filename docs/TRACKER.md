@@ -382,7 +382,7 @@ Good next candidates:
 
 - document the AWS smoke-test workflow clearly without exposing raw keys or account-specific sensitive values
 - keep README, tracker, and AWS deployment docs aligned with the implemented runtime
-- move from `latest` image deployments to immutable image tags
+- extend immutable image tagging consistently across manual and Terraform-driven deployment paths
 - add HTTPS/ACM support for the ALB
 - add private ECS task networking using NAT Gateway or VPC endpoints
 - add Terraform remote state
