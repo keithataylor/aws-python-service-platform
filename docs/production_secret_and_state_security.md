@@ -263,17 +263,18 @@ Production rules:
 
 ## IAM access model
 
-The ECS task role should have least-privilege access.
+For ECS secret injection, the ECS task execution role should have least-privilege access to the specific Secrets Manager secrets injected into the container.
 
-It should be allowed to read only the specific Secrets Manager secrets required by the app.
+In this project, the execution role reads the configured secret values before the app container starts and injects them as environment variables.
+
+The running application should not need direct Secrets Manager read access unless the app code explicitly calls AWS Secrets Manager at runtime.
 
 Example permission intent:
 
 ```text
-Allow ecs task role to read:
-  production DB password secret
-  production agent credential hash secret
-```
+Allow ECS task execution role to read:
+  DB password secret
+  agent credential hash secret
 
 It should not have broad access such as:
 
@@ -308,14 +309,15 @@ Before production deployment:
 - [ ] S3 state bucket is encrypted.
 - [ ] S3 state bucket has versioning enabled.
 - [ ] State locking is enabled.
-- [ ] Terraform state files are not committed to Git.
-- [ ] `.tfvars` files containing real values are not committed.
+- [x] Terraform state files are not committed to Git.
+- [x] `.tfvars` files containing real values are not committed.
+- [x] `AGENT_CREDENTIAL_HASH_SECRET` is created in Secrets Manager outside Terraform.
 - [ ] Production secrets are created in Secrets Manager outside Terraform.
-- [ ] Terraform references only secret ARNs/names.
-- [ ] ECS task definition injects secrets at runtime.
-- [ ] ECS task role can read only required secrets.
-- [ ] Secret values are not output by Terraform.
-- [ ] Secret values are not read through Terraform data sources.
+- [x] Terraform references only secret ARNs/names for `AGENT_CREDENTIAL_HASH_SECRET`.
+- [x] ECS task definition declares `DB_PASSWORD` and `AGENT_CREDENTIAL_HASH_SECRET` in its `secrets` block so ECS injects them into the app container environment.
+- [x] ECS task execution role has `secretsmanager:GetSecretValue` permission only for the specific Secrets Manager secrets referenced by that task definition.
+- [x] Secret values are not output by Terraform.
+- [x] Secret values are not read through Terraform data sources.
 - [ ] RDS password handling is documented before production use.
 - [ ] `AGENT_CREDENTIAL_HASH_SECRET` rotation strategy is documented before production use.
 
