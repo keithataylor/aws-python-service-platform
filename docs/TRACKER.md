@@ -25,6 +25,8 @@ The supporting engineering story is backend/platform implementation depth:
 - Docker-based local development
 - SQL migrations and seed data
 - AWS ECS/Fargate deployment
+- private ECS/Fargate task networking
+- VPC endpoints for private AWS service access
 - RDS PostgreSQL runtime configuration
 - Secrets Manager runtime secret injection
 - CloudWatch log collection
@@ -215,10 +217,18 @@ Implemented AWS infrastructure includes:
 - private DB subnets
 - internet gateway
 - public route table
+- private app route table
 - DB subnet group
+- VPC endpoints for:
+  - ECR API
+  - ECR Docker registry
+  - CloudWatch Logs
+  - Secrets Manager
+  - S3
 - security groups for:
   - ALB
   - ECS app task
+  - AWS service interface endpoints
   - RDS PostgreSQL
 - private RDS PostgreSQL instance
 - RDS-managed database password secret
@@ -257,26 +267,27 @@ Verified AWS checks:
 - The deployed ECS task definition uses the Git commit SHA image tag, not `latest`.
 - The CD workflow waits for ECS service stability and checks `/health` after deployment.
 
-Current intentional AWS development limitation:
+Current AWS networking posture:
 
-- ECS app tasks currently run in public subnets with `assignPublicIp=ENABLED`.
-- This avoids adding NAT Gateway or VPC endpoints during the first runnable AWS vertical slice.
-- Inbound access is still controlled by security groups:
-  - Internet -> ALB on port `80`
-  - ALB -> ECS app task on port `8000`
-  - ECS app task -> RDS on port `5432`
+- ALB nodes run in public subnets and provide the public HTTP entry point.
+- ECS/Fargate app tasks run in private app subnets with `assignPublicIp=DISABLED`.
+- Running app tasks have no public IP.
+- RDS PostgreSQL runs in private DB subnets.
+- Private app task access to required AWS services is provided by VPC endpoints:
+  - interface endpoints for ECR API, ECR Docker registry, CloudWatch Logs, and Secrets Manager
+  - S3 gateway endpoint associated with the private app route table
+- App task egress is restricted to RDS, the AWS service interface endpoint security group, and the S3 endpoint prefix list.
+- No NAT Gateway is currently deployed; add one later only if the app needs general outbound access to external/non-AWS services.
 
 Deferred AWS hardening:
 
 - HTTPS listener with ACM certificate
 - optional HTTP-to-HTTPS redirect
-- private ECS task networking without public task IPs
-- NAT Gateway or VPC endpoints for outbound AWS service access
-- immutable image tags instead of deploying `latest`
 - Terraform remote state backend
 - migration version tracking
 - production-grade credential registration/rotation workflow
-- CI/CD deployment workflow
+- CI-before-deploy safety clarification and deployment guardrails
+- Terraform image tag handling alignment with SHA-based CD
 
 ---
 
@@ -366,7 +377,7 @@ The project is not currently trying to implement:
 - SQLAlchemy/Alembic unless direct SQL becomes a real limitation
 - broad AI governance platform features
 - production credential registry UI
-- production-grade AWS networking hardening
+- full production-grade AWS hardening beyond the current portfolio/dev deployment
 
 These are deliberate scope boundaries, not forgotten requirements.
 
@@ -384,7 +395,7 @@ Good next candidates:
 - keep README, tracker, and AWS deployment docs aligned with the implemented runtime
 - extend immutable image tagging consistently across manual and Terraform-driven deployment paths
 - add HTTPS/ACM support for the ALB
-- add private ECS task networking using NAT Gateway or VPC endpoints
+- add NAT Gateway or another explicit egress path only if future external API access requires it
 - add Terraform remote state
 - add migration version tracking if migration reruns become harder to reason about
 - formalize production-style registered-agent credential registration and rotation
@@ -410,6 +421,8 @@ The current stable implementation demonstrates:
 - structured runtime/audit logging
 - local Docker/PostgreSQL runtime
 - AWS ECS/Fargate/RDS/ALB runtime
+- private ECS task networking with no public task IP
+- VPC endpoint-based AWS service access without NAT Gateway
 - RDS-backed registered-agent identity resolution
 - HMAC-hashed API-key identity adapter
 - one-off ECS operational tasks

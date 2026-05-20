@@ -31,6 +31,7 @@ Current relevant Terraform files:
 - `infra/terraform/resources.tf`
 - `infra/terraform/network.tf`
 - `infra/terraform/security_groups.tf`
+- `infra/terraform/vpc_endpoints.tf`
 - `infra/terraform/load_balancer.tf`
 - `infra/terraform/rds.tf`
 - `infra/terraform/terraform.tfvars.example`
@@ -72,14 +73,20 @@ File purposes:
   - private app subnets
   - private DB subnets
   - public route table
+  - private app route table
   - route table associations
   - RDS DB subnet group
 
 - `security_groups.tf`
   - ALB security group
   - app/ECS task security group
+  - AWS service interface endpoint security group
   - DB/RDS security group
   - security group ingress and egress rules
+
+- `vpc_endpoints.tf`
+  - interface VPC endpoints for ECR API, ECR Docker registry, CloudWatch Logs, and Secrets Manager
+  - S3 gateway endpoint associated with the private app route table
 
 - `load_balancer.tf`
   - Application Load Balancer
@@ -115,6 +122,7 @@ Files:
 - `infra/terraform/resources.tf`
 - `infra/terraform/network.tf`
 - `infra/terraform/security_groups.tf`
+- `infra/terraform/vpc_endpoints.tf`
 - `infra/terraform/load_balancer.tf`
 - `infra/terraform/rds.tf`
 - `infra/terraform/terraform.tfvars.example`
@@ -687,8 +695,10 @@ Completed:
 - private DB subnets
 - internet gateway
 - public route table
+- private app route table
 - DB subnet group
 - security groups
+- VPC endpoints
 - ALB
 - target group
 - HTTP listener
@@ -723,29 +733,78 @@ Verified smoke-test outcomes:
 - `doc1` is public and returns the document body.
 - `doc2` is private and returns a denied MCP result with `DEFAULT_DENY`.
 
-Current intentional dev limitation:
+Current networking posture:
 
-- ECS app tasks currently run in public subnets with `assignPublicIp=ENABLED`.
-- This avoids adding NAT Gateway or VPC endpoints during the first runnable AWS vertical slice.
-- Inbound access is still controlled through security groups:
-  - Internet -> ALB on port `80`
-  - ALB -> ECS app task on port `8000`
-  - ECS app task -> RDS on port `5432`
+- ECS app tasks run in private app subnets with `assignPublicIp=DISABLED`.
+- Running ECS app tasks have no public IP.
+- ALB nodes remain in public subnets and forward to the private task IPs registered in the target group.
+- Required AWS-service access from private ECS tasks uses VPC endpoints:
+  - interface endpoints for ECR API, ECR Docker registry, CloudWatch Logs, and Secrets Manager
+  - S3 gateway endpoint associated with the private app route table
+- App task egress is restricted to RDS, the AWS service interface endpoint security group, and the S3 endpoint prefix list.
+- No NAT Gateway is currently deployed; this remains deferred until there is a real requirement for general external egress.
 
 Deferred production hardening:
 
 - HTTPS listener with ACM certificate
 - optional HTTP `80 -> 443` redirect
-- private app subnets without public task IPs
-- NAT Gateway or VPC endpoints
-- immutable image tags instead of `latest`
 - Terraform remote state
 - production credential registry/admin process
 - migration version table
+- CI-before-deploy safety clarification and deployment guardrails
+- Terraform image tag handling alignment with SHA-based CD
 
 ---
 
-## 19. Implemented AWS runtime mapping
+## 19. Added private ECS task networking and VPC endpoints
+
+Files:
+
+- `infra/terraform/network.tf`
+- `infra/terraform/security_groups.tf`
+- `infra/terraform/vpc_endpoints.tf`
+- `infra/terraform/ecs_service.tf`
+
+Why:
+
+- ECS/Fargate app tasks should not need public IP addresses.
+- The ALB should remain the public entry point.
+- Private ECS tasks still need AWS-service access for image pulls, runtime secrets, and logs.
+- The project does not currently require general outbound internet access, so VPC endpoints are more precise than adding a NAT Gateway for this phase.
+
+Implemented changes:
+
+- Added an explicit private app route table for the private app subnets.
+- Added an AWS service interface endpoint security group.
+- Added interface VPC endpoints for:
+  - ECR API
+  - ECR Docker registry
+  - CloudWatch Logs
+  - Secrets Manager
+- Added an S3 gateway endpoint associated with the private app route table.
+- Moved the ECS service network configuration from public subnets to private app subnets.
+- Changed the ECS service network configuration to `assign_public_ip = false`.
+- Replaced broad app HTTPS egress to `0.0.0.0/0` with narrower egress rules:
+  - app task security group to AWS service interface endpoint security group on port `443`
+  - app task security group to the S3 endpoint prefix list on port `443`
+
+Verified result:
+
+- ECS service reports `assignPublicIp = DISABLED`.
+- Running task network interface has no public IP.
+- VPC endpoints are available for ECR API, ECR Docker registry, CloudWatch Logs, Secrets Manager, and S3.
+- `/health` through the ALB returns `{"status":"ok"}` after the change.
+- Terraform plan is clean after apply.
+
+Important distinction:
+
+- The Internet Gateway remains because the ALB is public.
+- No NAT Gateway is currently used.
+- Private ECS task AWS-service access is through VPC endpoint resources, not through public task IPs.
+
+---
+
+## 20. Implemented AWS runtime mapping
 
 Local Docker Compose mapping:
 
@@ -760,8 +819,9 @@ AWS mapping now implemented:
 - ECS task definition injects secret values from Secrets Manager.
 - RDS supplies the database endpoint.
 - ECS service keeps the app task running.
-- ECS registers Fargate task IPs with the ALB target group.
-- ALB forwards public traffic to healthy ECS app tasks.
+- ECS registers private Fargate task IPs with the ALB target group.
+- ALB forwards public traffic to healthy private ECS app tasks.
+- Private ECS tasks use VPC endpoints for ECR image pulls, CloudWatch Logs, Secrets Manager, and S3-backed ECR image layers.
 - CloudWatch receives app logs.
 - One-off ECS tasks run operational scripts inside the same AWS runtime boundary.
 
@@ -778,7 +838,7 @@ The application settings code continues reading the same variable names. The dep
 
 ---
 
-## 20. Local-to-AWS environment mapping
+## 21. Local-to-AWS environment mapping
 
 Local app configuration:
 
@@ -839,7 +899,7 @@ Example smoke checks:
 
 ---
 
-## 21. Why so many explicit resources are required
+## 22. Why so many explicit resources are required
 
 AWS does not infer the runtime wiring automatically.
 

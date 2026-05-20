@@ -17,7 +17,7 @@ This keeps the infrastructure-as-code layer separate from the sensitive runtime 
 
 Terraform should be responsible for:
 
-- VPC, subnets, route tables, and security groups
+- VPC, subnets, route tables, security groups, and VPC endpoints
 - ECR repositories
 - ECS clusters, services, and task definitions
 - ALB, listeners, and target groups
@@ -25,6 +25,7 @@ Terraform should be responsible for:
 - IAM roles and permissions
 - CloudWatch log groups
 - references to existing Secrets Manager secrets
+- private AWS-service access paths needed by ECS tasks
 
 Terraform should not be responsible for:
 
@@ -275,6 +276,7 @@ Example permission intent:
 Allow ECS task execution role to read:
   DB password secret
   agent credential hash secret
+```
 
 It should not have broad access such as:
 
