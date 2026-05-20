@@ -20,3 +20,9 @@ variable "agent_credential_hash_secret_arn" {
   description = "ARN of the existing Secrets Manager secret containing AGENT_CREDENTIAL_HASH_SECRET."
   type        = string
 }
+
+variable "bootstrap_image_tag" {
+  description = "Initial image tag used by Terraform when creating the bootstrap ECS task definition. GitHub Actions CD deploys immutable Git SHA image tags after infrastructure exists."
+  type        = string
+  default     = "latest"
+}

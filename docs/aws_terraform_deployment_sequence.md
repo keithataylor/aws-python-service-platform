@@ -752,7 +752,6 @@ Deferred production hardening:
 - production credential registry/admin process
 - migration version table
 - CI-before-deploy safety clarification and deployment guardrails
-- Terraform image tag handling alignment with SHA-based CD
 
 ---
 
@@ -804,7 +803,42 @@ Important distinction:
 
 ---
 
-## 20. Implemented AWS runtime mapping
+## 20. Clarified Terraform bootstrap image tag ownership
+
+Files:
+
+- `infra/terraform/ecs_task_definition.tf`
+- `infra/terraform/variables.tf`
+- `infra/terraform/ecs_service.tf`
+
+Why:
+
+- Terraform needs an image reference so it can create the initial ECS task definition.
+- GitHub Actions CD owns real application releases after infrastructure exists.
+- The CD workflow deploys immutable Git commit SHA image tags by registering new ECS task definition revisions.
+- Terraform should not roll back the ECS service to its original bootstrap task definition during later infrastructure applies.
+
+Implemented changes:
+
+- Added `var.bootstrap_image_tag`, defaulting to `latest`.
+- Updated the Terraform ECS task definition image reference to use `var.bootstrap_image_tag`.
+- Kept the ECS service lifecycle rule that ignores `task_definition` and `desired_count`.
+
+Important distinction:
+
+- Terraform owns the ECS task definition shape and bootstrap image reference.
+- GitHub Actions CD owns the currently deployed application image revision.
+- Manual operations may temporarily own `desired_count`, for example when pausing the service at zero.
+- Terraform should not treat SHA-based CD deployments as infrastructure drift.
+
+Verified result:
+
+- `terraform fmt` completed.
+- `terraform validate` passed.
+- `terraform plan` reported no changes because `var.bootstrap_image_tag` still defaults to `latest`.
+
+
+## 21. Implemented AWS runtime mapping
 
 Local Docker Compose mapping:
 
@@ -838,7 +872,7 @@ The application settings code continues reading the same variable names. The dep
 
 ---
 
-## 21. Local-to-AWS environment mapping
+## 22. Local-to-AWS environment mapping
 
 Local app configuration:
 
@@ -899,7 +933,7 @@ Example smoke checks:
 
 ---
 
-## 22. Why so many explicit resources are required
+## 23. Why so many explicit resources are required
 
 AWS does not infer the runtime wiring automatically.
 
