@@ -18,7 +18,7 @@ This repository is intended to demonstrate backend/platform engineering depth, n
 - PostgreSQL-backed business data and audit persistence
 - structured runtime and PDP audit logging
 - Docker Compose local development workflow
-- AWS deployment with ECR, ECS/Fargate, ALB, RDS PostgreSQL, Secrets Manager, IAM, and CloudWatch
+- AWS deployment with ECR, ECS/Fargate, ALB, private ECS networking, VPC endpoints, RDS PostgreSQL, Secrets Manager, IAM, and CloudWatch
 - rerunnable SQL migrations
 - one-off ECS operational tasks for RDS migrations and dev credential seeding
 - local and AWS MCP smoke-test helpers
@@ -278,7 +278,11 @@ Implemented AWS infrastructure:
 - HTTP listener
 - target group registration for ECS tasks
 - VPC, public subnets, private app subnets, and private DB subnets
-- security groups for ALB, app tasks, and RDS
+- private app route table for private ECS task subnets
+- VPC endpoints for private AWS service access:
+  - interface endpoints for ECR API, ECR Docker registry, CloudWatch Logs, and Secrets Manager
+  - S3 gateway endpoint associated with the private app route table
+- security groups for ALB, app tasks, AWS service interface endpoints, and RDS
 - private RDS PostgreSQL instance
 - RDS-managed database password secret
 - manually-created Secrets Manager secret for `AGENT_CREDENTIAL_HASH_SECRET`
@@ -309,16 +313,21 @@ Verified AWS smoke tests:
 - deployed `docs_tool` denies `doc2` with `DEFAULT_DENY`
 - the deployed tool path resolves a DB-backed registered-agent credential through `X-Agent-Api-Key`
 
-Current AWS development limitation:
+Current AWS networking posture:
 
-- ECS app tasks currently run in public subnets with `assignPublicIp=ENABLED`.
-- This avoids NAT Gateway or VPC endpoints during the first runnable AWS slice.
-- Inbound access remains restricted through security groups:
-  - Internet -> ALB on port `80`
-  - ALB -> ECS app task on port `8000`
-  - ECS app task -> RDS on port `5432`
+- ALB nodes remain in public subnets and provide the public HTTP entry point.
+- ECS/Fargate app tasks run in private app subnets with `assignPublicIp=DISABLED`.
+- Running app tasks have private IPs only; they are registered with the ALB target group by private task IP.
+- RDS PostgreSQL remains in private DB subnets.
+- Private app task access to required AWS services uses VPC endpoints rather than a NAT Gateway:
+  - interface endpoints for ECR API, ECR Docker registry, CloudWatch Logs, and Secrets Manager
+  - S3 gateway endpoint associated with the private app route table
+- App task security group egress is limited to required paths:
+  - RDS PostgreSQL on port `5432`
+  - AWS service interface endpoint security group on port `443`
+  - S3 endpoint prefix list on port `443`
 
-This is a deliberate development-stage trade-off, not the intended production networking posture.
+No NAT Gateway is currently deployed. That is intentional for this slice because the app does not yet need general outbound internet access to third-party APIs or arbitrary external services.
 
 ## Operational helper scripts
 
@@ -512,7 +521,7 @@ It is not currently trying to be:
 - IdP integration
 - database-backed policy authoring/storage
 - production credential registry UI
-- production-grade AWS networking hardening
+- full production-grade AWS hardening beyond the current portfolio/dev deployment
 
 The emphasis is on doing a smaller set of backend/platform concerns properly:
 
@@ -538,8 +547,7 @@ Credible next improvements include:
 - extend immutable image tagging consistently across manual and Terraform-driven deployment paths
 - HTTPS listener with ACM certificate
 - optional HTTP-to-HTTPS redirect
-- private ECS task networking without public task IPs
-- NAT Gateway or VPC endpoints for outbound AWS service access
+- optional NAT Gateway or controlled egress path only if future app behaviour requires general external access
 - Terraform remote state backend
 - migration version tracking
 - production-grade registered-agent credential registration and rotation workflow
@@ -564,6 +572,8 @@ Current status:
 - local Docker/PostgreSQL path works
 - local and CI tests pass
 - AWS ECS/RDS/ALB deployment path works
+- ECS app tasks run in private app subnets with no public IP
+- VPC endpoints provide private AWS service access for ECR, CloudWatch Logs, Secrets Manager, and S3
 - AWS RDS migrations run through one-off ECS tasks
 - AWS dev registered-agent credential seeding/rotation works
 - deployed MCP allow and deny paths have been smoke-tested

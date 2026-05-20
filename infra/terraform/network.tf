@@ -108,6 +108,24 @@ resource "aws_route_table_association" "public_b" {
   route_table_id = aws_route_table.public.id
 }
 
+resource "aws_route_table" "private_app_subnets" {
+  vpc_id = aws_vpc.app.id
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-private-app-rt"
+  })
+}
+
+resource "aws_route_table_association" "private_app_a_to_private_app_route_table" {
+  subnet_id      = aws_subnet.private_app_a.id
+  route_table_id = aws_route_table.private_app_subnets.id
+}
+
+resource "aws_route_table_association" "private_app_b_to_private_app_route_table" {
+  subnet_id      = aws_subnet.private_app_b.id
+  route_table_id = aws_route_table.private_app_subnets.id
+}
+
 resource "aws_db_subnet_group" "app" {
   name = "${local.name_prefix}-db-subnet-group"
 

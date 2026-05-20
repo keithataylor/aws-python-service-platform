@@ -28,6 +28,26 @@ resource "aws_security_group" "db" {
   })
 }
 
+resource "aws_security_group" "aws_service_interface_endpoints" {
+  name        = "${local.name_prefix}-aws-service-endpoints-sg"
+  description = "Allow private app tasks to reach AWS service interface endpoints."
+  vpc_id      = aws_vpc.app.id
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-aws-service-endpoints-sg"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "aws_service_interface_endpoints_from_app_tasks" {
+  security_group_id = aws_security_group.aws_service_interface_endpoints.id
+  description       = "Allow app tasks to connect to AWS service interface endpoints over HTTPS."
+
+  referenced_security_group_id = aws_security_group.app.id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+}
+
 resource "aws_vpc_security_group_ingress_rule" "alb_http_from_internet" {
   security_group_id = aws_security_group.alb.id
   description       = "Allow HTTP traffic from the internet to the ALB."
@@ -78,12 +98,22 @@ resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
   to_port                      = 5432
 }
 
-resource "aws_vpc_security_group_egress_rule" "app_to_https_internet" {
+resource "aws_vpc_security_group_egress_rule" "app_to_aws_service_interface_endpoints" {
   security_group_id = aws_security_group.app.id
-  description       = "Allow app tasks to reach AWS service endpoints for ECR, Secrets Manager, and CloudWatch Logs."
+  description       = "Allow app tasks to reach AWS service interface endpoints over HTTPS."
 
-  cidr_ipv4   = "0.0.0.0/0"
-  ip_protocol = "tcp"
-  from_port   = 443
-  to_port     = 443
+  referenced_security_group_id = aws_security_group.aws_service_interface_endpoints.id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "app_to_s3_gateway_endpoint" {
+  security_group_id = aws_security_group.app.id
+  description       = "Allow app tasks to reach S3 through the private app S3 gateway endpoint."
+
+  prefix_list_id = aws_vpc_endpoint.s3_gateway_for_private_app_route_table.prefix_list_id
+  ip_protocol    = "tcp"
+  from_port      = 443
+  to_port        = 443
 }
