@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  checks: read
   id-token: write
 
 jobs:
@@ -16,6 +17,26 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+
+      - name: Require tests to have passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Checking required CI result for commit $SHA"
+
+          CONCLUSION=$(gh api "repos/$REPO/commits/$SHA/check-runs" \
+            --jq '.check_runs[] | select(.name == "test") | .conclusion' \
+            | head -n 1)
+
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "Required CI check 'test' has not passed for commit $SHA."
+            echo "Actual conclusion: ${CONCLUSION:-not found}"
+            exit 1
+          fi
+
+          echo "Required CI check 'test' passed."
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
