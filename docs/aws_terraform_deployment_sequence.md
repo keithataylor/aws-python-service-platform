@@ -751,7 +751,6 @@ Deferred production hardening:
 - Terraform remote state
 - production credential registry/admin process
 - migration version table
-- CI-before-deploy safety clarification and deployment guardrails
 
 ---
 

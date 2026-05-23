@@ -544,7 +544,7 @@ Planned hardening should remain tied to production-relevant gaps.
 
 Credible next improvements include:
 
-- extend immutable image tagging consistently across manual and Terraform-driven deployment paths
+- add a manual rollback workflow for redeploying a previous known-good ECS task definition or image SHA
 - HTTPS listener with ACM certificate
 - optional HTTP-to-HTTPS redirect
 - optional NAT Gateway or controlled egress path only if future app behaviour requires general external access
@@ -579,4 +579,5 @@ Current status:
 - deployed MCP allow and deny paths have been smoke-tested
 - IAM Identity Center admin access is configured for normal AWS console work
 - manual GitHub Actions CD is implemented using OIDC, ECR image push, ECS task definition revision deployment, ECS service rollout, and `/health` smoke check
+- manual GitHub Actions CD checks that the `test` check passed for the exact commit SHA before deploying
 - deployed ECS task definitions now use immutable Git commit SHA image tags rather than relying on `latest`

@@ -266,6 +266,8 @@ Verified AWS checks:
 - The ECS service is updated to a new task definition revision during CD.
 - The deployed ECS task definition uses the Git commit SHA image tag, not `latest`.
 - The CD workflow waits for ECS service stability and checks `/health` after deployment.
+- Manual CD requires the `test` check to have passed for the exact commit SHA before deployment proceeds.
+- Terraform uses a bootstrap image tag for initial ECS task definition creation while GitHub Actions CD owns SHA-based runtime deployment revisions.
 
 Current AWS networking posture:
 
@@ -286,8 +288,6 @@ Deferred AWS hardening:
 - Terraform remote state backend
 - migration version tracking
 - production-grade credential registration/rotation workflow
-- CI-before-deploy safety clarification and deployment guardrails
-- Terraform image tag handling alignment with SHA-based CD
 
 ---
 
