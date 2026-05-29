@@ -954,3 +954,15 @@ The infrastructure must explicitly define:
 The Mermaid diagram shows the bones.
 
 The Terraform resources define the tissue, routes, attachment points, permissions, and runtime wiring that make the architecture actually work.
+
+## Production hardening deliberately deferred
+
+This deployment sequence records the implemented AWS/Terraform build path for the current production-representative portfolio slice.
+
+The sequence does not claim to implement every control expected in a full commercial production environment. Production hardening items such as HTTPS/ACM, Terraform remote state, multi-environment state separation, restore testing, monitoring/alerting, migration version tracking, and production credential administration are documented as deliberate boundaries in:
+
+- `docs/aws_deployment_target.md`
+- `docs/production_secret_and_state_security.md`
+- `docs/aws_operator_runbook.md`
+
+This keeps the deployment sequence focused on what was actually built, while making the remaining commercial hardening boundary explicit.

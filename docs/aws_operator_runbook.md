@@ -447,8 +447,12 @@ The current AWS environment is a development/portfolio deployment.
 Known non-production limitations:
 
 - HTTP only; HTTPS/ACM is not yet configured.
-- Terraform state is currently local, not remote S3-backed state.
+- Terraform state is currently local, not remote S3-backed state with locking.
+- The deployment is single-environment rather than separated into dev, staging, and production.
 - RDS migration version tracking is not yet implemented.
+- RDS backups are configured through the database service, but restore testing is not documented as part of this project.
+- CloudWatch logging is implemented, but production alarms, dashboards, and alerting are not yet configured.
 - Dev credential registration is operational-script based, not a production admin workflow.
 - No NAT Gateway is currently deployed; this is acceptable for the current AWS-service-only egress model, but would need revisiting if the app calls external APIs.
 - Post-deploy smoke testing currently checks `/health`; fuller MCP smoke checks remain manual.
+- Formal IAM/security review evidence is not packaged in the repo.
