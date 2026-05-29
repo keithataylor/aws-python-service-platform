@@ -538,6 +538,14 @@ The emphasis is on doing a smaller set of backend/platform concerns properly:
 - AWS deployment fundamentals
 - CI discipline
 
+### Commercial production boundary
+
+This repository demonstrates a production-representative AWS backend/platform slice, not a fully operated commercial production environment.
+
+The implemented slice shows the core responsibilities expected of a small real-world AWS service: private ECS task networking, RDS persistence, runtime secret injection, CloudWatch logging, CI, manual CD, smoke testing, and auditable policy enforcement.
+
+A real client production deployment would normally add further controls such as remote Terraform state, HTTPS/ACM, environment separation, monitoring and alerting, restore testing, migration version tracking, and a production credential-administration workflow. Those items are tracked as deliberate hardening boundaries rather than treated as forgotten requirements.
+
 ## Engineering roadmap
 
 Planned hardening should remain tied to production-relevant gaps.

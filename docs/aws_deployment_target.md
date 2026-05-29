@@ -48,6 +48,34 @@ The application code should continue reading configuration through the existing 
 
 The current AWS deployment runs the existing service using RDS-backed configuration, CloudWatch logging, private ECS task networking, and VPC endpoints for required AWS-service access.
 
+## Production completeness boundary
+
+This AWS deployment is production-representative, not production-complete.
+
+It demonstrates the core infrastructure pattern required for a small real-world Python backend service:
+
+- public Application Load Balancer as the controlled ingress point
+- ECS/Fargate app tasks running in private app subnets
+- RDS PostgreSQL running in private DB subnets
+- private AWS-service access through VPC endpoints
+- runtime secrets injected from Secrets Manager
+- CloudWatch log capture
+- Terraform-managed infrastructure
+- manual GitHub Actions CD into ECS
+
+A commercial production deployment would normally add further operational controls, including:
+
+- HTTPS with ACM certificate and optional HTTP-to-HTTPS redirect
+- remote Terraform state with locking
+- separate environment/state management for dev, staging, and production
+- fuller monitoring, alarms, and operational alerting
+- documented backup and restore testing
+- migration version tracking
+- production-grade credential registration and rotation workflow
+- formal IAM/security review evidence
+
+These items are deliberately documented as production-hardening boundaries rather than implemented immediately. The project focuses on a complete, auditable AWS runtime slice that demonstrates the main backend/platform responsibilities without expanding into full enterprise operations.
+
 ## Deferred scope
 
 Credential brokerage, STS-based tool credentials, S3-backed document reads, admin API, and advanced concurrency testing are deferred until the baseline deployment is working.

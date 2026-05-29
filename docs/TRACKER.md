@@ -285,9 +285,14 @@ Deferred AWS hardening:
 
 - HTTPS listener with ACM certificate
 - optional HTTP-to-HTTPS redirect
-- Terraform remote state backend
+- Terraform remote state backend with locking
+- separate Terraform state/configuration for dev, staging, and production
+- fuller CloudWatch alarms, dashboards, and alerting
+- documented RDS backup/restore verification
 - migration version tracking
-- production-grade credential registration/rotation workflow
+- production-grade registered-agent credential registration and rotation workflow
+- formal IAM/security review evidence
+- fuller post-deploy MCP smoke checks in the CD/runbook flow
 
 ---
 

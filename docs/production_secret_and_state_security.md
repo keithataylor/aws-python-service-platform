@@ -6,7 +6,7 @@ This document defines the production security approach for Terraform state and r
 
 The project rule is:
 
-> Terraform manages infrastructure.  
+> Terraform manages infrastructure.
 > Secret values are created, owned, rotated, and administered outside Terraform.
 
 This keeps the infrastructure-as-code layer separate from the sensitive runtime credential layer.
@@ -152,6 +152,14 @@ They may contain:
 - dependency information
 
 Even without secret values, state should not be public or committed to Git.
+
+### Current project boundary
+
+Remote Terraform state is documented here as the production recommendation, but it is not currently implemented for this portfolio/dev environment.
+
+The current project remains a single-operator deployment using local Terraform state, with the strict rule that local state files must not be committed to Git.
+
+Remote state should be added if the project moves beyond single-developer demonstration into shared infrastructure management, client handover, or a more production-like multi-environment workflow.
 
 ---
 
